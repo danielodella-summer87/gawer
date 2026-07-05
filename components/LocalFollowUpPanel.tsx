@@ -35,11 +35,15 @@ export function LocalFollowUpPanel({
   const [feedback, setFeedback] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  // Mantiene el historial al día cuando otro bloque de la ficha (ej. checklist documental)
-  // guarda cambios y refresca la página vía router.refresh().
+  // Mantiene el historial y el estado comercial al día cuando otro bloque de la ficha
+  // (checklist documental, briefing ejecutivo) guarda cambios y refresca vía router.refresh().
   useEffect(() => {
     setHistorial(initialHistorial);
   }, [initialHistorial]);
+
+  useEffect(() => {
+    setEstadoComercial(initialSeguimiento.estadoComercial);
+  }, [initialSeguimiento.estadoComercial]);
 
   async function handleSave() {
     setIsSaving(true);

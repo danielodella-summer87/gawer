@@ -51,6 +51,10 @@ const statusColors: Record<string, string> = {
   "Intermediación no verificable": "bg-gawer-gray-100 text-gawer-gray-600 border-gawer-gray-300",
   "Descarte sugerido por inconsistencia crítica": "bg-red-50 text-red-700 border-red-200",
 
+  // Briefing ejecutivo — nivel de preparación (OPERATIVO-LOCAL-4)
+  "No lista": "bg-red-50 text-red-700 border-red-200",
+  "En preparación": "bg-amber-50 text-amber-800 border-amber-200",
+
   // Acceso directo / capacidades
   Confirmado: "bg-emerald-50 text-emerald-800 border-emerald-200",
   "No confirmado": "bg-amber-50 text-amber-800 border-amber-200",

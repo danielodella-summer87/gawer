@@ -14,7 +14,7 @@ import { generateDocumentChecklist, type DocumentChecklistItem } from "./documen
 export interface LocalProposalHistorialEvento {
   id: string;
   at: string;
-  type: "creacion" | "estado" | "responsable" | "proxima_accion" | "nota" | "documento";
+  type: "creacion" | "estado" | "responsable" | "proxima_accion" | "nota" | "documento" | "escalamiento";
   label: string;
   details?: string;
 }
@@ -234,6 +234,36 @@ export async function updateLocalProposalDocumentChecklist(
     ...proposal,
     documentChecklist: itemsActualizados,
     historial: [...proposal.historial, ...eventos],
+  };
+
+  proposals[index] = updated;
+  await writeLocalProposals(proposals);
+  return updated;
+}
+
+// Acción de decisión operativa del briefing ejecutivo (OPERATIVO-LOCAL-4): pasa el estado
+// comercial oficial a "Revisión ejecutiva Fernando/Liliana" y deja constancia explícita en
+// el historial. Sigue siendo una acción humana — no la dispara el sistema por sí solo.
+export async function markLocalProposalForExecutiveReview(id: string): Promise<LocalProposal | null> {
+  const proposals = await readLocalProposals();
+  const index = proposals.findIndex((p) => p.id === id);
+  if (index === -1) return null;
+
+  const proposal = proposals[index];
+  const now = new Date().toISOString();
+
+  const updated: LocalProposal = {
+    ...proposal,
+    seguimiento: { ...proposal.seguimiento, estadoComercial: "Revisión ejecutiva Fernando/Liliana" },
+    historial: [
+      ...proposal.historial,
+      {
+        id: `hist-${Date.now()}-escalamiento`,
+        at: now,
+        type: "escalamiento",
+        label: "Propuesta marcada para revisión Fernando/Liliana",
+      },
+    ],
   };
 
   proposals[index] = updated;

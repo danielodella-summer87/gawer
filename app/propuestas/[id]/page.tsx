@@ -26,8 +26,10 @@ import {
   documentChecklistOptions,
 } from "@/lib/mock/gawerData";
 import { getLocalProposalById, type LocalProposal } from "@/lib/local/proposalsStore";
+import { generateExecutiveBriefing } from "@/lib/local/executiveBriefing";
 import { LocalFollowUpPanel } from "@/components/LocalFollowUpPanel";
 import { LocalDocumentChecklistPanel } from "@/components/LocalDocumentChecklistPanel";
+import { LocalExecutiveBriefingPanel } from "@/components/LocalExecutiveBriefingPanel";
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -36,6 +38,7 @@ interface PageProps {
 function LocalProposalDetail({ proposal }: { proposal: LocalProposal }) {
   const { input, assessment } = proposal;
   const documentosMarcados = documentChecklistOptions.filter((d) => input.documentos?.[d]);
+  const briefing = generateExecutiveBriefing(proposal);
 
   return (
     <AppShell topbarTitle="Ficha de oportunidad">
@@ -98,6 +101,14 @@ function LocalProposalDetail({ proposal }: { proposal: LocalProposal }) {
           La IA no aprueba, rechaza ni descarta operaciones de forma autónoma. Toda decisión definitiva
           corresponde al equipo de GAWER.
         </p>
+      </div>
+
+      <div className="mb-8">
+        <LocalExecutiveBriefingPanel
+          proposalId={proposal.id}
+          briefing={briefing}
+          estadoComercialActual={proposal.seguimiento.estadoComercial}
+        />
       </div>
 
       <div className="mb-8">

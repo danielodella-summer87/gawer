@@ -1,14 +1,16 @@
 // Persistencia local de desarrollo. No usar como almacenamiento productivo.
 //
-// Endpoint interno, solo para localhost, sin autenticación (fase OPERATIVO-LOCAL-2/3).
-// Actualiza campos de seguimiento interno (estado comercial, responsable, próxima acción, nota)
-// o el checklist documental de una propuesta local, y registra el evento correspondiente en su
-// historial. No afecta propuestas mock ni requiere base de datos.
+// Endpoint interno, solo para localhost, sin autenticación (fase OPERATIVO-LOCAL-2/3/4).
+// Actualiza campos de seguimiento interno (estado comercial, responsable, próxima acción, nota),
+// el checklist documental, o marca la propuesta para revisión Fernando/Liliana (briefing
+// ejecutivo). Registra el evento correspondiente en el historial. No afecta propuestas mock
+// ni requiere base de datos.
 
 import { NextResponse } from "next/server";
 import {
   updateLocalProposalSeguimiento,
   updateLocalProposalDocumentChecklist,
+  markLocalProposalForExecutiveReview,
   type LocalProposalSeguimientoPatch,
 } from "@/lib/local/proposalsStore";
 import type { DocumentChecklistItem } from "@/lib/local/documentChecklist";
@@ -19,6 +21,20 @@ interface RouteContext {
 
 interface DocumentChecklistPatchBody {
   documentChecklist: DocumentChecklistItem[];
+}
+
+interface ActionPatchBody {
+  action: "mark_for_executive_review";
+}
+
+type PatchBody = ActionPatchBody | DocumentChecklistPatchBody | LocalProposalSeguimientoPatch;
+
+function isActionPatch(body: unknown): body is ActionPatchBody {
+  return (
+    !!body &&
+    typeof body === "object" &&
+    (body as ActionPatchBody).action === "mark_for_executive_review"
+  );
 }
 
 function isDocumentChecklistPatch(body: unknown): body is DocumentChecklistPatchBody {
@@ -32,7 +48,7 @@ function isDocumentChecklistPatch(body: unknown): body is DocumentChecklistPatch
 export async function PATCH(request: Request, { params }: RouteContext) {
   const { id } = await params;
 
-  let body: DocumentChecklistPatchBody | LocalProposalSeguimientoPatch | null = null;
+  let body: PatchBody | null = null;
   try {
     body = await request.json();
   } catch {
@@ -41,6 +57,14 @@ export async function PATCH(request: Request, { params }: RouteContext) {
 
   if (!body) {
     return NextResponse.json({ error: "Payload inválido." }, { status: 400 });
+  }
+
+  if (isActionPatch(body)) {
+    const updated = await markLocalProposalForExecutiveReview(id);
+    if (!updated) {
+      return NextResponse.json({ error: "Propuesta local no encontrada." }, { status: 404 });
+    }
+    return NextResponse.json({ proposal: updated });
   }
 
   if (isDocumentChecklistPatch(body)) {

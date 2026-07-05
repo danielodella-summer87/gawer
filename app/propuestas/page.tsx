@@ -12,6 +12,7 @@ import { proposals, formatCurrency, commercialStates, documentChecklistOptions }
 import type { RiskLevel, AccesoPrincipal, NivelIntermediacion, CisEstado } from "@/lib/mock/gawerData";
 import type { LocalProposal } from "@/lib/local/proposalsStore";
 import { summarizeChecklist } from "@/lib/local/documentChecklist";
+import { generateExecutiveBriefing } from "@/lib/local/executiveBriefing";
 
 const riesgos: RiskLevel[] = ["Bajo", "Medio", "Alto", "Crítico"];
 const accesos: AccesoPrincipal[] = ["Confirmado", "No confirmado", "Desconocido"];
@@ -39,6 +40,7 @@ interface DisplayRow {
   responsable?: string;
   proximaAccion?: string;
   documentacionNivel?: string;
+  briefingReadiness?: string;
 }
 
 function mapAccesoDirecto(v: string): AccesoPrincipal {
@@ -101,6 +103,7 @@ function localToRow(lp: LocalProposal): DisplayRow {
     responsable: lp.seguimiento.responsableInterno || undefined,
     proximaAccion: lp.seguimiento.proximaAccion || undefined,
     documentacionNivel: checklistSummary.nivelPreparacion,
+    briefingReadiness: generateExecutiveBriefing(lp).readinessLevel,
   };
 }
 
@@ -343,6 +346,11 @@ export default function PropuestasPage() {
                     {p.esLocal && p.recomendacionPreliminar && (
                       <p className="mt-1 text-[10px] text-gawer-gray-400 whitespace-nowrap">
                         Sugerido: {p.recomendacionPreliminar}
+                      </p>
+                    )}
+                    {p.esLocal && p.briefingReadiness && (
+                      <p className="mt-0.5 text-[10px] text-gawer-gray-400 whitespace-nowrap">
+                        Briefing: {p.briefingReadiness}
                       </p>
                     )}
                   </td>
