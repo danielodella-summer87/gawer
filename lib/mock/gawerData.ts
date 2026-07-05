@@ -218,9 +218,11 @@ export const urgencyOptions = ["Baja", "Media", "Alta", "Crítica"];
 export const documentChecklistOptions = [
   "CIS / Corporate Information Sheet / Hoja de Información Corporativa",
   "LOI / Carta de intención",
+  "Mandato o autorización de representación",
   "Evidencia bancaria",
   "Evidencia de disponibilidad de fondos",
-  "Mandato o autorización de representación",
+  "SBLC",
+  "RWA",
   "Documentación de garantía financiera",
   "Documentación de oro / producto",
   "Documentación cripto / trazabilidad de fondos",
