@@ -27,9 +27,11 @@ import {
 } from "@/lib/mock/gawerData";
 import { getLocalProposalById, type LocalProposal } from "@/lib/local/proposalsStore";
 import { generateExecutiveBriefing } from "@/lib/local/executiveBriefing";
+import { generateProposalResponseDrafts } from "@/lib/local/proposalResponseDrafts";
 import { LocalFollowUpPanel } from "@/components/LocalFollowUpPanel";
 import { LocalDocumentChecklistPanel } from "@/components/LocalDocumentChecklistPanel";
 import { LocalExecutiveBriefingPanel } from "@/components/LocalExecutiveBriefingPanel";
+import { LocalResponseDraftsPanel } from "@/components/LocalResponseDraftsPanel";
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -39,6 +41,7 @@ function LocalProposalDetail({ proposal }: { proposal: LocalProposal }) {
   const { input, assessment } = proposal;
   const documentosMarcados = documentChecklistOptions.filter((d) => input.documentos?.[d]);
   const briefing = generateExecutiveBriefing(proposal);
+  const responseDrafts = generateProposalResponseDrafts(proposal);
 
   return (
     <AppShell topbarTitle="Ficha de oportunidad">
@@ -109,6 +112,10 @@ function LocalProposalDetail({ proposal }: { proposal: LocalProposal }) {
           briefing={briefing}
           estadoComercialActual={proposal.seguimiento.estadoComercial}
         />
+      </div>
+
+      <div className="mb-8">
+        <LocalResponseDraftsPanel proposalId={proposal.id} drafts={responseDrafts} />
       </div>
 
       <div className="mb-8">

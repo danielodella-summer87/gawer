@@ -14,7 +14,15 @@ import { generateDocumentChecklist, type DocumentChecklistItem } from "./documen
 export interface LocalProposalHistorialEvento {
   id: string;
   at: string;
-  type: "creacion" | "estado" | "responsable" | "proxima_accion" | "nota" | "documento" | "escalamiento";
+  type:
+    | "creacion"
+    | "estado"
+    | "responsable"
+    | "proxima_accion"
+    | "nota"
+    | "documento"
+    | "escalamiento"
+    | "respuesta_copiada";
   label: string;
   details?: string;
 }
@@ -178,6 +186,35 @@ export async function updateLocalProposalSeguimiento(
     ...proposal,
     seguimiento: { ...seguimientoActual, ...patch },
     historial: [...proposal.historial, ...eventos],
+  };
+
+  proposals[index] = updated;
+  await writeLocalProposals(proposals);
+  return updated;
+}
+
+// Registra en el historial que se copió un borrador de respuesta al proponente (OPERATIVO-LOCAL-5).
+// No se envía ningún mensaje real ni se persiste el cuerpo completo del borrador: solo queda
+// constancia de qué tipo de respuesta se copió y cuándo, para trazabilidad interna.
+export async function logResponseDraftCopy(id: string, draftTitle: string): Promise<LocalProposal | null> {
+  const proposals = await readLocalProposals();
+  const index = proposals.findIndex((p) => p.id === id);
+  if (index === -1) return null;
+
+  const proposal = proposals[index];
+  const now = new Date().toISOString();
+
+  const updated: LocalProposal = {
+    ...proposal,
+    historial: [
+      ...proposal.historial,
+      {
+        id: `hist-${Date.now()}-respuesta`,
+        at: now,
+        type: "respuesta_copiada",
+        label: `Borrador de respuesta copiado: ${draftTitle}`,
+      },
+    ],
   };
 
   proposals[index] = updated;
