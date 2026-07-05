@@ -4,12 +4,17 @@
 // No hay base de datos ni servicios externos: lee y escribe .local-data/gawer/proposals.json.
 
 import { NextResponse } from "next/server";
-import { readAllProposals, createProposal, clearAllProposals } from "@/lib/data/proposalsRepository";
+import {
+  readAllProposals,
+  createProposal,
+  clearAllProposals,
+  isSupabaseConfigured,
+} from "@/lib/data/proposalsRepository";
 import type { LocalProposalInput } from "@/lib/local/proposalAssessment";
 
 export async function GET() {
   const proposals = await readAllProposals();
-  return NextResponse.json({ proposals });
+  return NextResponse.json({ proposals, mode: isSupabaseConfigured() ? "supabase" : "local" });
 }
 
 export async function POST(request: Request) {
@@ -46,7 +51,19 @@ export async function POST(request: Request) {
   return NextResponse.json({ proposal }, { status: 201 });
 }
 
+// La limpieza masiva está deshabilitada en modo Supabase: este endpoint no debe poder borrar
+// propuestas reales. No hay ningún mecanismo de confirmación técnica adicional implementado a
+// propósito — reactivar esto requeriría una decisión explícita, no solo llamar al endpoint.
 export async function DELETE() {
+  if (isSupabaseConfigured()) {
+    return NextResponse.json(
+      {
+        error:
+          "La limpieza masiva está deshabilitada en modo Supabase para proteger propuestas reales.",
+      },
+      { status: 403 }
+    );
+  }
   await clearAllProposals();
   return NextResponse.json({ ok: true });
 }

@@ -2,7 +2,7 @@
 
 import { useState, useMemo, useEffect, useCallback } from "react";
 import Link from "next/link";
-import { Plus, X, Siren, FlaskConical, Trash2 } from "lucide-react";
+import { Plus, X, Siren, FlaskConical, Trash2, ShieldAlert } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
 import { SectionHeader } from "@/components/SectionHeader";
 import { RiskBadge } from "@/components/RiskBadge";
@@ -119,12 +119,14 @@ export default function PropuestasPage() {
 
   const [localProposals, setLocalProposals] = useState<LocalProposal[]>([]);
   const [isClearing, setIsClearing] = useState(false);
+  const [mode, setMode] = useState<"local" | "supabase">("local");
 
   const fetchLocalProposals = useCallback(async () => {
     try {
       const res = await fetch("/api/local/proposals");
       const data = await res.json();
       setLocalProposals(Array.isArray(data.proposals) ? data.proposals : []);
+      setMode(data.mode === "supabase" ? "supabase" : "local");
     } catch {
       setLocalProposals([]);
     }
@@ -135,6 +137,10 @@ export default function PropuestasPage() {
   }, [fetchLocalProposals]);
 
   async function handleClearLocal() {
+    // Defensa en profundidad: el botón ya está deshabilitado/oculto en modo Supabase, y el
+    // endpoint también rechaza el DELETE masivo — este chequeo evita además cualquier llamada
+    // accidental desde acá si el estado de "mode" quedara desactualizado.
+    if (mode === "supabase") return;
     const confirmado = window.confirm(
       "¿Confirmás que querés eliminar todas las propuestas guardadas localmente? Esta acción no afecta los datos mock."
     );
@@ -175,15 +181,27 @@ export default function PropuestasPage() {
         description="GAWER descarta aproximadamente el 90% de las propuestas recibidas, principalmente por intermediarios sin acceso directo al titular del negocio."
         action={
           <div className="flex flex-wrap items-center gap-2">
-            <button
-              type="button"
-              onClick={handleClearLocal}
-              disabled={isClearing || localProposals.length === 0}
-              className="inline-flex items-center gap-2 rounded-md border border-gawer-gray-300 bg-white px-4 py-2.5 text-sm font-medium text-gawer-gray-700 hover:bg-gawer-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-            >
-              <Trash2 className="h-4 w-4" />
-              Limpiar propuestas locales
-            </button>
+            {mode === "supabase" ? (
+              <button
+                type="button"
+                disabled
+                title="La limpieza masiva está deshabilitada en modo Supabase para proteger propuestas reales."
+                className="inline-flex items-center gap-2 rounded-md border border-gawer-gray-200 bg-gawer-gray-50 px-4 py-2.5 text-sm font-medium text-gawer-gray-400 cursor-not-allowed"
+              >
+                <Trash2 className="h-4 w-4" />
+                Limpiar propuestas locales
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={handleClearLocal}
+                disabled={isClearing || localProposals.length === 0}
+                className="inline-flex items-center gap-2 rounded-md border border-gawer-gray-300 bg-white px-4 py-2.5 text-sm font-medium text-gawer-gray-700 hover:bg-gawer-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+              >
+                <Trash2 className="h-4 w-4" />
+                Limpiar propuestas locales
+              </button>
+            )}
             <button
               type="button"
               onClick={() => setShowModal(true)}
@@ -204,6 +222,15 @@ export default function PropuestasPage() {
           entorno de desarrollo (localhost) y no representan datos de producción.
         </p>
       </div>
+
+      {mode === "supabase" && (
+        <div className="mb-6 flex items-start gap-3 rounded-lg border border-gawer-petrol/30 bg-gawer-petrol/5 p-4">
+          <ShieldAlert className="h-4 w-4 text-gawer-petrol shrink-0 mt-0.5" />
+          <p className="text-xs text-gawer-gray-700">
+            La limpieza masiva está deshabilitada en modo Supabase para proteger propuestas reales.
+          </p>
+        </div>
+      )}
 
       <div className="mb-6 flex flex-wrap gap-3">
         <select
