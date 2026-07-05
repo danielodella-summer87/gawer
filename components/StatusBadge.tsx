@@ -13,6 +13,7 @@ const statusColors: Record<string, string> = {
   Ganado: "bg-emerald-50 text-emerald-800 border-emerald-200",
   Perdido: "bg-gawer-gray-100 text-gawer-gray-600 border-gawer-gray-300",
   Descartado: "bg-red-50 text-red-700 border-red-200",
+  "Descarte sugerido": "bg-red-50 text-red-700 border-red-200",
 
   // Estados documentales
   Recibido: "bg-emerald-50 text-emerald-800 border-emerald-200",

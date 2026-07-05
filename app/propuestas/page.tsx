@@ -1,21 +1,90 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect, useCallback } from "react";
 import Link from "next/link";
-import { Plus, X, Siren } from "lucide-react";
+import { Plus, X, Siren, FlaskConical, Trash2 } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
 import { SectionHeader } from "@/components/SectionHeader";
 import { RiskBadge } from "@/components/RiskBadge";
 import { ScoreBadge } from "@/components/ScoreBadge";
 import { StatusBadge } from "@/components/StatusBadge";
-import { proposals, formatCurrency, commercialStates } from "@/lib/mock/gawerData";
+import { proposals, formatCurrency, commercialStates, documentChecklistOptions } from "@/lib/mock/gawerData";
 import type { RiskLevel, AccesoPrincipal, NivelIntermediacion, CisEstado } from "@/lib/mock/gawerData";
+import type { LocalProposal } from "@/lib/local/proposalsStore";
 
-const areas = [...new Set(proposals.map((p) => p.areaNegocio))];
 const riesgos: RiskLevel[] = ["Bajo", "Medio", "Alto", "Crítico"];
 const accesos: AccesoPrincipal[] = ["Confirmado", "No confirmado", "Desconocido"];
 const cadenas: NivelIntermediacion[] = ["Baja", "Media", "Alta", "Crítica"];
 const cisOpciones: CisEstado[] = ["Recibido", "Pendiente"];
+
+const CIS_KEY = documentChecklistOptions[0];
+
+interface DisplayRow {
+  id: string;
+  esLocal: boolean;
+  empresa: string;
+  proponente: string;
+  areaNegocio: string;
+  montoEstimado: number;
+  moneda: string;
+  cis: CisEstado;
+  accesoDirectoPrincipal: AccesoPrincipal;
+  cadenaIntermediacion: NivelIntermediacion;
+  score: number;
+  riesgo: RiskLevel;
+  estado: string;
+  alertaCritica: boolean;
+}
+
+function mapAccesoDirecto(v: string): AccesoPrincipal {
+  if (v === "Sí") return "Confirmado";
+  if (v === "No" || v === "Parcial") return "No confirmado";
+  return "Desconocido";
+}
+
+function mapCadenaIntermediacion(v: string): NivelIntermediacion {
+  if (v === "Ninguno" || v === "1") return "Baja";
+  if (v === "2") return "Media";
+  if (v === "3 o más") return "Alta";
+  return "Crítica";
+}
+
+const mockRows: DisplayRow[] = proposals.map((p) => ({
+  id: p.id,
+  esLocal: false,
+  empresa: p.empresa,
+  proponente: p.proponente,
+  areaNegocio: p.areaNegocio,
+  montoEstimado: p.montoEstimado,
+  moneda: p.moneda,
+  cis: p.cis,
+  accesoDirectoPrincipal: p.accesoDirectoPrincipal,
+  cadenaIntermediacion: p.cadenaIntermediacion,
+  score: p.score,
+  riesgo: p.riesgo,
+  estado: p.estado,
+  alertaCritica: p.alertaCritica,
+}));
+
+function localToRow(lp: LocalProposal): DisplayRow {
+  const input = lp.input;
+  return {
+    id: lp.id,
+    esLocal: true,
+    empresa: input.empresa?.trim() || input.nombreCompleto || "Sin empresa",
+    proponente: input.nombreCompleto || "Sin nombre",
+    areaNegocio: input.areaNegocio || "Sin especificar",
+    montoEstimado: Number(input.montoEstimado) || 0,
+    moneda: input.moneda || "USD",
+    cis: input.documentos?.[CIS_KEY] ? "Recibido" : "Pendiente",
+    accesoDirectoPrincipal: mapAccesoDirecto(input.accesoDirecto),
+    cadenaIntermediacion: mapCadenaIntermediacion(input.cantidadIntermediarios),
+    score: lp.assessment.score,
+    riesgo: lp.assessment.riesgo,
+    estado: lp.assessment.estadoSugerido,
+    alertaCritica: input.mtnHsbcLtn === "Sí",
+  };
+}
 
 export default function PropuestasPage() {
   const [showModal, setShowModal] = useState(false);
@@ -27,8 +96,46 @@ export default function PropuestasPage() {
   const [filterCadena, setFilterCadena] = useState<string>("");
   const [filterAlertaCritica, setFilterAlertaCritica] = useState(false);
 
+  const [localProposals, setLocalProposals] = useState<LocalProposal[]>([]);
+  const [isClearing, setIsClearing] = useState(false);
+
+  const fetchLocalProposals = useCallback(async () => {
+    try {
+      const res = await fetch("/api/local/proposals");
+      const data = await res.json();
+      setLocalProposals(Array.isArray(data.proposals) ? data.proposals : []);
+    } catch {
+      setLocalProposals([]);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchLocalProposals();
+  }, [fetchLocalProposals]);
+
+  async function handleClearLocal() {
+    const confirmado = window.confirm(
+      "¿Confirmás que querés eliminar todas las propuestas guardadas localmente? Esta acción no afecta los datos mock."
+    );
+    if (!confirmado) return;
+    setIsClearing(true);
+    try {
+      await fetch("/api/local/proposals", { method: "DELETE" });
+      await fetchLocalProposals();
+    } finally {
+      setIsClearing(false);
+    }
+  }
+
+  const allRows = useMemo(
+    () => [...localProposals.map(localToRow), ...mockRows],
+    [localProposals]
+  );
+
+  const areas = useMemo(() => [...new Set(allRows.map((r) => r.areaNegocio))], [allRows]);
+
   const filtered = useMemo(() => {
-    return proposals.filter((p) => {
+    return allRows.filter((p) => {
       if (filterEstado && p.estado !== filterEstado) return false;
       if (filterArea && p.areaNegocio !== filterArea) return false;
       if (filterRiesgo && p.riesgo !== filterRiesgo) return false;
@@ -38,7 +145,7 @@ export default function PropuestasPage() {
       if (filterAlertaCritica && !p.alertaCritica) return false;
       return true;
     });
-  }, [filterEstado, filterArea, filterRiesgo, filterCis, filterAcceso, filterCadena, filterAlertaCritica]);
+  }, [allRows, filterEstado, filterArea, filterRiesgo, filterCis, filterAcceso, filterCadena, filterAlertaCritica]);
 
   return (
     <AppShell topbarTitle="Gestión comercial">
@@ -46,16 +153,36 @@ export default function PropuestasPage() {
         title="Propuestas"
         description="GAWER descarta aproximadamente el 90% de las propuestas recibidas, principalmente por intermediarios sin acceso directo al titular del negocio."
         action={
-          <button
-            type="button"
-            onClick={() => setShowModal(true)}
-            className="inline-flex items-center gap-2 rounded-md bg-gawer-green px-4 py-2.5 text-sm font-medium text-white hover:bg-gawer-green-light transition-colors"
-          >
-            <Plus className="h-4 w-4" />
-            Nueva propuesta
-          </button>
+          <div className="flex flex-wrap items-center gap-2">
+            <button
+              type="button"
+              onClick={handleClearLocal}
+              disabled={isClearing || localProposals.length === 0}
+              className="inline-flex items-center gap-2 rounded-md border border-gawer-gray-300 bg-white px-4 py-2.5 text-sm font-medium text-gawer-gray-700 hover:bg-gawer-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+            >
+              <Trash2 className="h-4 w-4" />
+              Limpiar propuestas locales
+            </button>
+            <button
+              type="button"
+              onClick={() => setShowModal(true)}
+              className="inline-flex items-center gap-2 rounded-md bg-gawer-green px-4 py-2.5 text-sm font-medium text-white hover:bg-gawer-green-light transition-colors"
+            >
+              <Plus className="h-4 w-4" />
+              Nueva propuesta
+            </button>
+          </div>
         }
       />
+
+      <div className="mb-6 flex items-start gap-3 rounded-lg border border-gawer-gold/30 bg-gawer-gold/10 p-4">
+        <FlaskConical className="h-4 w-4 text-gawer-gold shrink-0 mt-0.5" />
+        <p className="text-xs text-gawer-gray-700">
+          Esta vista combina propuestas mock con propuestas guardadas localmente para validar el flujo
+          operativo antes de activar una base de datos real. Las propuestas locales se leen desde el
+          entorno de desarrollo (localhost) y no representan datos de producción.
+        </p>
+      </div>
 
       <div className="mb-6 flex flex-wrap gap-3">
         <select
@@ -159,9 +286,17 @@ export default function PropuestasPage() {
               {filtered.map((p) => (
                 <tr key={p.id} className="hover:bg-gawer-gray-50/50">
                   <td className="px-4 py-3">
-                    <div className="flex items-center gap-1.5">
+                    <div className="flex items-center gap-1.5 flex-wrap">
                       <p className="font-medium text-gawer-charcoal">{p.empresa}</p>
                       {p.alertaCritica && <Siren className="h-3.5 w-3.5 text-red-600" />}
+                      {p.esLocal && (
+                        <span
+                          title="Ingresada desde formulario público local"
+                          className="rounded-md border border-gawer-gold/40 bg-gawer-gold/10 px-1.5 py-0.5 text-[10px] font-medium text-gawer-gold whitespace-nowrap"
+                        >
+                          Propuesta local
+                        </span>
+                      )}
                     </div>
                     <p className="text-xs text-gawer-gray-500">{p.proponente}</p>
                   </td>
@@ -199,80 +334,24 @@ export default function PropuestasPage() {
                 <X className="h-5 w-5 text-gawer-gray-500" />
               </button>
             </div>
-            <form className="p-6 space-y-4" onSubmit={(e) => e.preventDefault()}>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {[
-                  { label: "Nombre completo", type: "text" },
-                  { label: "Empresa", type: "text" },
-                  { label: "Email", type: "email" },
-                  { label: "Teléfono", type: "tel" },
-                  { label: "País", type: "text" },
-                  { label: "Rol en la operación", type: "text" },
-                  { label: "Monto estimado", type: "number" },
-                  { label: "Moneda", type: "text", placeholder: "USD" },
-                ].map((field) => (
-                  <div key={field.label}>
-                    <label className="block text-sm font-medium text-gawer-gray-700 mb-1">{field.label}</label>
-                    <input
-                      type={field.type}
-                      placeholder={field.placeholder}
-                      className="w-full rounded-md border border-gawer-gray-200 px-3 py-2 text-sm focus:border-gawer-petrol focus:outline-none"
-                      readOnly
-                    />
-                  </div>
-                ))}
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gawer-gray-700 mb-1">Subárea de negocio</label>
-                <select className="w-full rounded-md border border-gawer-gray-200 px-3 py-2 text-sm" disabled>
-                  <option>Seleccionar subárea...</option>
-                  {areas.map((a) => <option key={a}>{a}</option>)}
-                </select>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gawer-gray-700 mb-1">Descripción de la propuesta</label>
-                <textarea rows={3} className="w-full rounded-md border border-gawer-gray-200 px-3 py-2 text-sm" readOnly />
-              </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gawer-gray-700 mb-1">¿Presenta CIS / Hoja de Información Corporativa?</label>
-                  <select className="w-full rounded-md border border-gawer-gray-200 px-3 py-2 text-sm" disabled>
-                    <option>Recibido</option><option>Pendiente</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gawer-gray-700 mb-1">¿Acceso directo al titular del negocio?</label>
-                  <select className="w-full rounded-md border border-gawer-gray-200 px-3 py-2 text-sm" disabled>
-                    <option>Confirmado</option><option>No confirmado</option><option>Desconocido</option>
-                  </select>
-                </div>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gawer-gray-700 mb-1">Documentos disponibles</label>
-                <input type="text" placeholder="CIS, LOI, evidencia bancaria..." className="w-full rounded-md border border-gawer-gray-200 px-3 py-2 text-sm" readOnly />
-              </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gawer-gray-700 mb-1">Urgencia</label>
-                  <select className="w-full rounded-md border border-gawer-gray-200 px-3 py-2 text-sm" disabled>
-                    <option>Baja</option><option>Media</option><option>Alta</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gawer-gray-700 mb-1">Qué necesita de GAWER</label>
-                  <input type="text" className="w-full rounded-md border border-gawer-gray-200 px-3 py-2 text-sm" readOnly />
-                </div>
-              </div>
+            <div className="p-6 space-y-4">
+              <p className="text-sm text-gawer-gray-600">
+                Para dar de alta una propuesta real en el entorno local, usá el{" "}
+                <Link href="/propuesta" target="_blank" className="font-medium text-gawer-petrol hover:text-gawer-green">
+                  formulario público
+                </Link>{" "}
+                — queda guardada automáticamente y aparece en este listado.
+              </p>
               <div className="flex justify-end pt-4 border-t border-gawer-gray-200">
                 <button
                   type="button"
                   onClick={() => setShowModal(false)}
                   className="rounded-md bg-gawer-green px-6 py-2.5 text-sm font-medium text-white hover:bg-gawer-green-light"
                 >
-                  Enviar propuesta (mock)
+                  Cerrar
                 </button>
               </div>
-            </form>
+            </div>
           </div>
         </div>
       )}
