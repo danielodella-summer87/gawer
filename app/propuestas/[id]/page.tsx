@@ -26,6 +26,7 @@ import {
   documentChecklistOptions,
 } from "@/lib/mock/gawerData";
 import { getLocalProposalById, type LocalProposal } from "@/lib/local/proposalsStore";
+import { LocalFollowUpPanel } from "@/components/LocalFollowUpPanel";
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -71,10 +72,15 @@ function LocalProposalDetail({ proposal }: { proposal: LocalProposal }) {
             {input.nombreCompleto} · {input.pais || "País no informado"} · {input.areaNegocio}
           </p>
         </div>
-        <div className="flex items-center gap-4">
-          <ScoreBadge score={assessment.score} size="lg" />
-          <RiskBadge level={assessment.riesgo} />
-          <StatusBadge status={assessment.estadoSugerido} />
+        <div className="flex flex-col items-end gap-1.5">
+          <div className="flex items-center gap-4">
+            <ScoreBadge score={assessment.score} size="lg" />
+            <RiskBadge level={assessment.riesgo} />
+            <StatusBadge status={proposal.seguimiento.estadoComercial} />
+          </div>
+          <p className="text-[10px] text-gawer-gray-400">
+            Recomendación preliminar del sistema: {assessment.estadoSugerido}
+          </p>
         </div>
       </div>
 
@@ -91,6 +97,14 @@ function LocalProposalDetail({ proposal }: { proposal: LocalProposal }) {
           La IA no aprueba, rechaza ni descarta operaciones de forma autónoma. Toda decisión definitiva
           corresponde al equipo de GAWER.
         </p>
+      </div>
+
+      <div className="mb-8">
+        <LocalFollowUpPanel
+          proposalId={proposal.id}
+          initialSeguimiento={proposal.seguimiento}
+          initialHistorial={proposal.historial}
+        />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -205,8 +219,11 @@ function LocalProposalDetail({ proposal }: { proposal: LocalProposal }) {
           </section>
 
           <section className="rounded-lg border border-gawer-petrol/30 bg-gawer-petrol/5 p-6">
-            <h2 className="text-sm font-semibold text-gawer-petrol mb-2">Estado sugerido</h2>
+            <h2 className="text-sm font-semibold text-gawer-petrol mb-2">Recomendación preliminar del sistema</h2>
             <p className="text-sm text-gawer-charcoal">{assessment.estadoSugerido}</p>
+            <p className="text-xs text-gawer-gray-500 mt-1">
+              No vinculante. El estado comercial oficial se gestiona en el bloque de seguimiento.
+            </p>
           </section>
 
           <section className="rounded-lg border border-gawer-gray-200 bg-white p-6 shadow-sm">

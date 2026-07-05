@@ -1,6 +1,6 @@
 // Persistencia local de desarrollo. No usar como almacenamiento productivo.
 //
-// Endpoint interno, solo para localhost, sin autenticación (fase OPERATIVO-LOCAL-1).
+// Endpoint interno, solo para localhost, sin autenticación (fase OPERATIVO-LOCAL-1/2).
 // No hay base de datos ni servicios externos: lee y escribe .local-data/gawer/proposals.json.
 
 import { NextResponse } from "next/server";
@@ -8,6 +8,7 @@ import {
   readLocalProposals,
   appendLocalProposal,
   clearLocalProposals,
+  createDefaultSeguimiento,
   type LocalProposal,
 } from "@/lib/local/proposalsStore";
 import {
@@ -50,13 +51,23 @@ export async function POST(request: Request) {
 
   const input = body as LocalProposalInput;
   const assessment = calculateLocalProposalAssessment(input);
+  const createdAt = new Date().toISOString();
 
   const proposal: LocalProposal = {
     id: `local-prop-${Date.now()}`,
-    createdAt: new Date().toISOString(),
+    createdAt,
     source: "local_public_form",
     input,
     assessment,
+    seguimiento: createDefaultSeguimiento(),
+    historial: [
+      {
+        id: `hist-${Date.now()}-creacion`,
+        at: createdAt,
+        type: "creacion",
+        label: "Propuesta recibida desde formulario público local",
+      },
+    ],
   };
 
   await appendLocalProposal(proposal);

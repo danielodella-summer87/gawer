@@ -34,6 +34,9 @@ interface DisplayRow {
   riesgo: RiskLevel;
   estado: string;
   alertaCritica: boolean;
+  recomendacionPreliminar?: string;
+  responsable?: string;
+  proximaAccion?: string;
 }
 
 function mapAccesoDirecto(v: string): AccesoPrincipal {
@@ -81,8 +84,11 @@ function localToRow(lp: LocalProposal): DisplayRow {
     cadenaIntermediacion: mapCadenaIntermediacion(input.cantidadIntermediarios),
     score: lp.assessment.score,
     riesgo: lp.assessment.riesgo,
-    estado: lp.assessment.estadoSugerido,
+    estado: lp.seguimiento.estadoComercial,
     alertaCritica: input.mtnHsbcLtn === "Sí",
+    recomendacionPreliminar: lp.assessment.estadoSugerido,
+    responsable: lp.seguimiento.responsableInterno || undefined,
+    proximaAccion: lp.seguimiento.proximaAccion || undefined,
   };
 }
 
@@ -299,6 +305,12 @@ export default function PropuestasPage() {
                       )}
                     </div>
                     <p className="text-xs text-gawer-gray-500">{p.proponente}</p>
+                    {p.esLocal && p.responsable && (
+                      <p className="text-[10px] text-gawer-gray-400 mt-0.5">Responsable: {p.responsable}</p>
+                    )}
+                    {p.esLocal && p.proximaAccion && (
+                      <p className="text-[10px] text-gawer-gray-400">Próxima acción: {p.proximaAccion}</p>
+                    )}
                   </td>
                   <td className="px-4 py-3 text-gawer-gray-700">{p.areaNegocio}</td>
                   <td className="px-4 py-3 font-medium">{formatCurrency(p.montoEstimado, p.moneda)}</td>
@@ -307,7 +319,14 @@ export default function PropuestasPage() {
                   <td className="px-4 py-3"><StatusBadge status={p.cadenaIntermediacion} /></td>
                   <td className="px-4 py-3"><ScoreBadge score={p.score} size="sm" /></td>
                   <td className="px-4 py-3"><RiskBadge level={p.riesgo} /></td>
-                  <td className="px-4 py-3"><StatusBadge status={p.estado} /></td>
+                  <td className="px-4 py-3">
+                    <StatusBadge status={p.estado} />
+                    {p.esLocal && p.recomendacionPreliminar && (
+                      <p className="mt-1 text-[10px] text-gawer-gray-400 whitespace-nowrap">
+                        Sugerido: {p.recomendacionPreliminar}
+                      </p>
+                    )}
+                  </td>
                   <td className="px-4 py-3">
                     <Link href={`/propuestas/${p.id}`} className="text-sm font-medium text-gawer-petrol hover:text-gawer-green">
                       Ver ficha
