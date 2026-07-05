@@ -13,8 +13,8 @@ import {
   LifeBuoy,
   BarChart3,
   Settings,
-  ChevronLeft,
-  ChevronRight,
+  ChevronsLeft,
+  ChevronsRight,
   Globe,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -46,7 +46,7 @@ export function Sidebar() {
     >
       <div
         className={cn(
-          "flex h-16 items-center border-b border-white/10",
+          "relative flex h-16 items-center border-b border-white/10",
           collapsed ? "justify-center px-2" : "gap-3 px-6"
         )}
       >
@@ -59,6 +59,21 @@ export function Sidebar() {
             <p className="text-[10px] text-white/50 leading-tight truncate">Evaluación estratégica</p>
           </div>
         )}
+
+        <button
+          type="button"
+          onClick={toggle}
+          title={collapsed ? "Expandir menú" : "Colapsar menú"}
+          aria-label={collapsed ? "Expandir menú" : "Colapsar menú"}
+          aria-pressed={collapsed}
+          className="absolute -right-3 top-1/2 z-10 flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-full border border-white/20 bg-gawer-charcoal text-white/80 shadow-md transition-colors hover:bg-gawer-green hover:text-white hover:border-gawer-green"
+        >
+          {collapsed ? (
+            <ChevronsRight className="h-3.5 w-3.5" />
+          ) : (
+            <ChevronsLeft className="h-3.5 w-3.5" />
+          )}
+        </button>
       </div>
 
       <nav className="flex-1 overflow-y-auto overflow-x-hidden px-3 py-4">
@@ -116,29 +131,14 @@ export function Sidebar() {
       </div>
 
       <div className="border-t border-white/10 p-3">
-        <button
-          type="button"
-          onClick={toggle}
-          title={collapsed ? "Expandir menú" : "Colapsar menú"}
-          aria-label={collapsed ? "Expandir menú" : "Colapsar menú"}
-          aria-pressed={collapsed}
-          className={cn(
-            "flex w-full items-center rounded-md py-2 text-sm font-medium text-white/70 hover:bg-white/10 hover:text-white transition-colors",
-            collapsed ? "justify-center px-2" : "justify-between px-3"
-          )}
-        >
-          {!collapsed && <span>Colapsar menú</span>}
-          {collapsed ? <ChevronRight className="h-4 w-4 shrink-0" /> : <ChevronLeft className="h-4 w-4 shrink-0" />}
-        </button>
-
         {!collapsed ? (
-          <div className="mt-3 rounded-md bg-white/5 px-3 py-2">
+          <div className="rounded-md bg-white/5 px-3 py-2">
             <p className="text-xs text-white/50">Versión mock</p>
             <p className="text-xs font-medium text-white/80">v0.1.0 — Discovery</p>
           </div>
         ) : (
           <div
-            className="mt-3 rounded-md bg-white/5 py-2 text-center"
+            className="rounded-md bg-white/5 py-2 text-center"
             title="Versión mock v0.1.0 — Discovery"
           >
             <p className="text-[10px] font-medium text-white/60">v0.1</p>
