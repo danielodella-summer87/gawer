@@ -47,8 +47,12 @@ export async function POST(request: Request) {
 
   const input = body as LocalProposalInput;
   const proposal = await createProposal(input);
+  const mode = isSupabaseConfigured() ? "supabase" : "local";
 
-  return NextResponse.json({ proposal }, { status: 201 });
+  return NextResponse.json(
+    { proposal, mode, source: proposal.source, id: proposal.id },
+    { status: 201 }
+  );
 }
 
 // La limpieza masiva está deshabilitada en modo Supabase: este endpoint no debe poder borrar

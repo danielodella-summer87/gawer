@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import {
   ShieldAlert,
@@ -156,6 +156,15 @@ export default function PropuestaPublicaPage() {
   const [submittedProposal, setSubmittedProposal] = useState<LocalProposal | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const [mode, setMode] = useState<"local" | "supabase">("local");
+  const [submittedMode, setSubmittedMode] = useState<"local" | "supabase">("local");
+
+  useEffect(() => {
+    fetch("/api/local/proposals")
+      .then((res) => res.json())
+      .then((data) => setMode(data?.mode === "supabase" ? "supabase" : "local"))
+      .catch(() => {});
+  }, []);
 
   function set<K extends keyof FormState>(key: K, value: FormState[K]) {
     setForm((f) => ({ ...f, [key]: value }));
@@ -181,11 +190,10 @@ export default function PropuestaPublicaPage() {
         return;
       }
       setSubmittedProposal(data.proposal as LocalProposal);
+      setSubmittedMode(data?.mode === "supabase" ? "supabase" : "local");
       if (typeof window !== "undefined") window.scrollTo({ top: 0, behavior: "smooth" });
     } catch {
-      setSubmitError(
-        "No se pudo conectar con el entorno local de desarrollo. Verifique que el servidor esté corriendo."
-      );
+      setSubmitError("No se pudo conectar con el servidor. Verifique la conexión e intente nuevamente.");
     } finally {
       setIsSubmitting(false);
     }
@@ -240,13 +248,23 @@ export default function PropuestaPublicaPage() {
           </p>
         </section>
 
-        <section className="flex items-start gap-3 rounded-lg border border-gawer-gold/30 bg-gawer-gold/10 p-4">
-          <FlaskConical className="h-4 w-4 text-gawer-gold shrink-0 mt-0.5" />
-          <p className="text-xs text-gawer-gray-700">
-            Persistencia local de desarrollo. Esta propuesta se guarda únicamente en el entorno local de
-            GAWER Intelligence para validar el flujo — no usar como almacenamiento productivo.
-          </p>
-        </section>
+        {mode === "supabase" ? (
+          <section className="flex items-start gap-3 rounded-lg border border-gawer-green/30 bg-gawer-green/5 p-4">
+            <ShieldAlert className="h-4 w-4 text-gawer-green shrink-0 mt-0.5" />
+            <p className="text-xs text-gawer-gray-700">
+              Persistencia real activa. Las propuestas enviadas desde este formulario quedan registradas en
+              la base de datos de GAWER para evaluación preliminar.
+            </p>
+          </section>
+        ) : (
+          <section className="flex items-start gap-3 rounded-lg border border-gawer-gold/30 bg-gawer-gold/10 p-4">
+            <FlaskConical className="h-4 w-4 text-gawer-gold shrink-0 mt-0.5" />
+            <p className="text-xs text-gawer-gray-700">
+              Persistencia local de desarrollo. Esta propuesta se guarda únicamente en el entorno local de
+              GAWER Intelligence para validar el flujo — no usar como almacenamiento productivo.
+            </p>
+          </section>
+        )}
 
         {submitError && (
           <section className="flex items-start gap-3 rounded-lg border border-red-200 bg-red-50 p-4">
@@ -260,15 +278,19 @@ export default function PropuestaPublicaPage() {
             <div className="mb-3 flex items-center gap-2">
               <CheckCircle2 className="h-5 w-5 text-gawer-green" />
               <h2 className="text-lg font-semibold text-gawer-charcoal">
-                Propuesta guardada en entorno local
+                {submittedMode === "supabase"
+                  ? "Propuesta recibida correctamente"
+                  : "Propuesta guardada en entorno local"}
               </h2>
             </div>
             <p className="text-sm text-gawer-charcoal mb-1 leading-relaxed">
-              Propuesta guardada en entorno local. En esta fase la información se almacena únicamente en
-              el entorno de desarrollo para validar el flujo con GAWER.
+              {submittedMode === "supabase"
+                ? "La información fue enviada al equipo de GAWER para evaluación preliminar."
+                : "Propuesta guardada en entorno local. En esta fase la información se almacena únicamente en el entorno de desarrollo para validar el flujo con GAWER."}
             </p>
             <p className="text-xs text-gawer-gray-500 mb-5">
-              ID de propuesta local: <span className="font-mono font-medium text-gawer-charcoal">{submittedProposal.id}</span>
+              {submittedMode === "supabase" ? "ID de propuesta: " : "ID de propuesta local: "}
+              <span className="font-mono font-medium text-gawer-charcoal">{submittedProposal.id}</span>
             </p>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
               <div className="rounded-md bg-white border border-gawer-gray-100 p-3">
@@ -589,8 +611,9 @@ export default function PropuestaPublicaPage() {
                 {isSubmitting ? "Guardando..." : "Enviar propuesta para evaluación preliminar"}
               </button>
               <p className="text-xs text-gawer-gray-500">
-                Este formulario guarda la propuesta en la persistencia local de desarrollo (entorno
-                localhost). No se envía a ningún sistema externo ni servicio de terceros.
+                {mode === "supabase"
+                  ? "Este formulario guarda la propuesta en la base de datos real de GAWER. No se envía a ningún sistema externo ni servicio de terceros."
+                  : "Este formulario guarda la propuesta en la persistencia local de desarrollo (entorno localhost). No se envía a ningún sistema externo ni servicio de terceros."}
               </p>
             </div>
           </form>
