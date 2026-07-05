@@ -1072,6 +1072,124 @@ export const reportData = {
   },
 };
 
+// Discovery GAWER (/discovery) — trazabilidad entre respuestas de Fernando y su implementación en la maqueta
+export interface DiscoveryTraceItem {
+  id: string;
+  tema: string;
+  criterio: string;
+  aplicacion: string;
+  pantallas: string[];
+  estado: string;
+}
+
+export const discoveryStats = {
+  respuestasAnalizadas: 30,
+  reglasIncorporadas: 10,
+  modulosImpactados: 8,
+  reglasCriticasValidadas: 1,
+  decisionesAutonomasIA: 0,
+};
+
+export const discoveryTraceability: DiscoveryTraceItem[] = [
+  {
+    id: "trace-a",
+    tema: "Oportunidad real",
+    criterio:
+      "Una oportunidad real requiere documentación y evidencias objetivas que demuestren capacidad jurídica, financiera y operativa.",
+    aplicacion:
+      "Ranking, ficha de oportunidad y dashboard evalúan preparación, calidad documental, capacidad demostrada y probabilidad de cierre.",
+    pantallas: ["Dashboard", "Ranking", "Propuestas", "Ficha"],
+    estado: "Implementado en maqueta",
+  },
+  {
+    id: "trace-b",
+    tema: "Descarte por intermediación",
+    criterio:
+      "El 90% de las propuestas se descarta por intermediarios sin relación directa con el titular del negocio.",
+    aplicacion:
+      "Se incorporaron filtros de acceso directo al principal, cadena de intermediación y riesgo por intermediación no verificable.",
+    pantallas: ["Propuestas", "Ranking", "Formulario público"],
+    estado: "Implementado en maqueta",
+  },
+  {
+    id: "trace-c",
+    tema: "CIS obligatorio",
+    criterio:
+      "Toda operación comienza con CIS / Corporate Information Sheet / Hoja de Información Corporativa.",
+    aplicacion:
+      "El formulario público pregunta por CIS, el listado muestra estado CIS y Documentos lo trata como documento obligatorio.",
+    pantallas: ["Formulario público", "Propuestas", "Documentos", "Base de conocimiento"],
+    estado: "Implementado en maqueta",
+  },
+  {
+    id: "trace-d",
+    tema: "Documentación por tipo de operación",
+    criterio:
+      "Compra de oro requiere LOI y evidencia bancaria; cripto requiere evidencia verificable de fondos; garantías requieren LOI y documentación específica.",
+    aplicacion:
+      "Áreas de negocio y Documentos muestran requisitos comunes y específicos por subárea.",
+    pantallas: ["Áreas de negocio", "Documentos", "Formulario público"],
+    estado: "Implementado en maqueta",
+  },
+  {
+    id: "trace-e",
+    tema: "Regla crítica MTN/LTN",
+    criterio:
+      "Transacciones con MTNs del HSBC respaldadas en LTNs brasileras no deben recibirse, porque Fernando indica que son falsas.",
+    aplicacion:
+      "Se incorporó alerta crítica, descarte sugerido y caso mock prop-005. El formulario público activa alerta si se marca esa opción.",
+    pantallas: ["Formulario público", "Ranking", "Propuestas", "Ficha prop-005", "Base de conocimiento"],
+    estado: "Regla crítica implementada",
+  },
+  {
+    id: "trace-f",
+    tema: "IA no autónoma",
+    criterio: "La IA nunca debe aprobar, rechazar ni descartar una negociación de forma autónoma.",
+    aplicacion:
+      "Todas las salidas IA se muestran como sugeridas/no vinculantes y requieren revisión humana.",
+    pantallas: ["IA", "Ranking", "Ficha", "Formulario público"],
+    estado: "Implementado en maqueta",
+  },
+  {
+    id: "trace-g",
+    tema: "Intervención Fernando/Liliana",
+    criterio:
+      "Fernando o Liliana intervienen cuando el cliente cumplió requisitos básicos y hay indicios razonables de viabilidad.",
+    aplicacion:
+      "Se creó estado/referencia de revisión ejecutiva Fernando/Liliana y se muestra en criterios de avance.",
+    pantallas: ["Propuestas", "Ficha", "Reportes", "Configuración"],
+    estado: "Implementado en maqueta",
+  },
+  {
+    id: "trace-h",
+    tema: "Definición de ganado",
+    criterio:
+      "Una operación se considera ganada solo cuando fue formalmente cerrada y GAWER percibió la remuneración acordada.",
+    aplicacion: "Estados comerciales y reportes usan esta definición.",
+    pantallas: ["Reportes", "Configuración", "Ranking"],
+    estado: "Implementado en maqueta",
+  },
+  {
+    id: "trace-i",
+    tema: "Definición de perdido/descarte",
+    criterio:
+      "Perdida cuando el cliente no demuestra requisitos mínimos. Descartada cuando hay documentación falsa, falta de información o inconsistencia crítica.",
+    aplicacion: "Se incorporaron estados comerciales y motivos de descarte.",
+    pantallas: ["Propuestas", "Reportes", "Configuración"],
+    estado: "Implementado en maqueta",
+  },
+  {
+    id: "trace-j",
+    tema: "Gobierno IA",
+    criterio:
+      "Los cambios en prompts, reglas o criterios de IA los aprueba Fernando, con consenso del equipo GAWER.",
+    aplicacion:
+      "Se incorporó el bloque \"Gobierno IA\" en la pantalla de IA y una sección dedicada de reglas críticas validadas en Configuración.",
+    pantallas: ["IA", "Configuración", "Base de conocimiento"],
+    estado: "Implementado en maqueta",
+  },
+];
+
 export function getScoreCategory(score: number): string {
   if (score >= 85) return "Lista para revisión ejecutiva";
   if (score >= 65) return "Requiere documentación adicional";
