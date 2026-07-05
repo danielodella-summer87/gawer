@@ -68,6 +68,12 @@ const statusColors: Record<string, string> = {
   Media: "bg-amber-50 text-amber-800 border-amber-200",
   Alta: "bg-orange-50 text-orange-800 border-orange-200",
   Crítica: "bg-red-50 text-red-700 border-red-200",
+
+  // Bandeja operativa — fecha de próxima acción (OPERATIVO-LOCAL-6)
+  Vencida: "bg-red-50 text-red-700 border-red-200",
+  Hoy: "bg-amber-50 text-amber-800 border-amber-200",
+  Programada: "bg-cyan-50 text-cyan-800 border-cyan-200",
+  "Sin fecha": "bg-gawer-gray-100 text-gawer-gray-500 border-gawer-gray-300",
 };
 
 interface StatusBadgeProps {

@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import {
   LayoutDashboard,
   FileText,
+  Inbox,
   Trophy,
   Building2,
   BookOpen,
@@ -24,6 +25,7 @@ import { useSidebar } from "./SidebarState";
 const navItems = [
   { href: "/", label: "Dashboard", icon: LayoutDashboard },
   { href: "/propuestas", label: "Propuestas", icon: FileText },
+  { href: "/bandeja", label: "Bandeja operativa", icon: Inbox },
   { href: "/ranking", label: "Ranking", icon: Trophy },
   { href: "/areas-negocio", label: "Áreas de negocio", icon: Building2 },
   { href: "/base-conocimiento", label: "Base de conocimiento", icon: BookOpen },
