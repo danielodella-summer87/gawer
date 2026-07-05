@@ -232,11 +232,11 @@ export default function PropuestaPublicaPage() {
             </div>
           </div>
           <h1 className="text-2xl sm:text-3xl font-semibold">Presentar propuesta a GAWER</h1>
-          <p className="mt-2 text-sm text-white/70 max-w-xl leading-relaxed">
-            Completá la información inicial para que el equipo de GAWER pueda evaluar si la operación
+          <p className="mt-2 text-sm text-white/90 max-w-xl leading-relaxed">
+            Complete la información inicial para que el equipo de GAWER pueda evaluar si la operación
             reúne las condiciones mínimas para avanzar.
           </p>
-          <p className="mt-3 text-xs text-white/40 max-w-xl">
+          <p className="mt-3 text-xs text-white/60 max-w-xl">
             Completar este formulario no implica aprobación, aceptación ni compromiso comercial por parte de GAWER.
           </p>
         </div>
@@ -358,7 +358,7 @@ export default function PropuestaPublicaPage() {
               <Field
                 label="Tipo de proponente"
                 required
-                helper="Ayuda a GAWER a entender rápidamente tu rol en la operación."
+                helper="Ayuda a GAWER a entender rápidamente su rol en la operación."
               >
                 <RadioPills
                   name="tipoProponente"
@@ -511,7 +511,7 @@ export default function PropuestaPublicaPage() {
               <div className="flex items-center gap-3 rounded-md border border-dashed border-gawer-gray-300 bg-gawer-gray-50 px-4 py-4 text-sm text-gawer-gray-500">
                 <UploadCloud className="h-5 w-5 shrink-0 text-gawer-gray-400" />
                 <span>
-                  Carga documental disponible en una fase posterior. Por ahora, indicá qué documentos tenés
+                  Carga documental disponible en una fase posterior. Por ahora, indique qué documentos tiene
                   disponibles marcando el checklist de arriba.
                 </span>
               </div>
