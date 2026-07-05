@@ -48,7 +48,7 @@ export interface LocalProposalSeguimientoPatch {
 export interface LocalProposal {
   id: string;
   createdAt: string;
-  source: "local_public_form";
+  source: "local_public_form" | "supabase_public_form";
   input: LocalProposalInput;
   assessment: LocalProposalAssessment;
   seguimiento: LocalProposalSeguimiento;

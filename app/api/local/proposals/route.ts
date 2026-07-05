@@ -4,21 +4,11 @@
 // No hay base de datos ni servicios externos: lee y escribe .local-data/gawer/proposals.json.
 
 import { NextResponse } from "next/server";
-import {
-  readLocalProposals,
-  appendLocalProposal,
-  clearLocalProposals,
-  createDefaultSeguimiento,
-  type LocalProposal,
-} from "@/lib/local/proposalsStore";
-import {
-  calculateLocalProposalAssessment,
-  type LocalProposalInput,
-} from "@/lib/local/proposalAssessment";
-import { generateDocumentChecklist } from "@/lib/local/documentChecklist";
+import { readAllProposals, createProposal, clearAllProposals } from "@/lib/data/proposalsRepository";
+import type { LocalProposalInput } from "@/lib/local/proposalAssessment";
 
 export async function GET() {
-  const proposals = await readLocalProposals();
+  const proposals = await readAllProposals();
   return NextResponse.json({ proposals });
 }
 
@@ -51,33 +41,12 @@ export async function POST(request: Request) {
   }
 
   const input = body as LocalProposalInput;
-  const assessment = calculateLocalProposalAssessment(input);
-  const createdAt = new Date().toISOString();
-
-  const proposal: LocalProposal = {
-    id: `local-prop-${Date.now()}`,
-    createdAt,
-    source: "local_public_form",
-    input,
-    assessment,
-    seguimiento: createDefaultSeguimiento(),
-    historial: [
-      {
-        id: `hist-${Date.now()}-creacion`,
-        at: createdAt,
-        type: "creacion",
-        label: "Propuesta recibida desde formulario público local",
-      },
-    ],
-    documentChecklist: generateDocumentChecklist(input),
-  };
-
-  await appendLocalProposal(proposal);
+  const proposal = await createProposal(input);
 
   return NextResponse.json({ proposal }, { status: 201 });
 }
 
 export async function DELETE() {
-  await clearLocalProposals();
+  await clearAllProposals();
   return NextResponse.json({ ok: true });
 }

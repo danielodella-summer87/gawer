@@ -9,12 +9,12 @@
 
 import { NextResponse } from "next/server";
 import {
-  updateLocalProposalSeguimiento,
-  updateLocalProposalDocumentChecklist,
-  markLocalProposalForExecutiveReview,
-  logResponseDraftCopy,
-  type LocalProposalSeguimientoPatch,
-} from "@/lib/local/proposalsStore";
+  updateProposalSeguimiento,
+  updateProposalDocumentChecklist,
+  markProposalForExecutiveReview,
+  logProposalResponseDraftCopy,
+} from "@/lib/data/proposalsRepository";
+import type { LocalProposalSeguimientoPatch } from "@/lib/local/proposalsStore";
 import type { DocumentChecklistItem } from "@/lib/local/documentChecklist";
 
 interface RouteContext {
@@ -76,7 +76,7 @@ export async function PATCH(request: Request, { params }: RouteContext) {
   }
 
   if (isEscalatePatch(body)) {
-    const updated = await markLocalProposalForExecutiveReview(id);
+    const updated = await markProposalForExecutiveReview(id);
     if (!updated) {
       return NextResponse.json({ error: "Propuesta local no encontrada." }, { status: 404 });
     }
@@ -84,7 +84,7 @@ export async function PATCH(request: Request, { params }: RouteContext) {
   }
 
   if (isLogResponseDraftPatch(body)) {
-    const updated = await logResponseDraftCopy(id, body.draftTitle);
+    const updated = await logProposalResponseDraftCopy(id, body.draftTitle);
     if (!updated) {
       return NextResponse.json({ error: "Propuesta local no encontrada." }, { status: 404 });
     }
@@ -92,14 +92,14 @@ export async function PATCH(request: Request, { params }: RouteContext) {
   }
 
   if (isDocumentChecklistPatch(body)) {
-    const updated = await updateLocalProposalDocumentChecklist(id, body.documentChecklist);
+    const updated = await updateProposalDocumentChecklist(id, body.documentChecklist);
     if (!updated) {
       return NextResponse.json({ error: "Propuesta local no encontrada." }, { status: 404 });
     }
     return NextResponse.json({ proposal: updated });
   }
 
-  const updated = await updateLocalProposalSeguimiento(id, body as LocalProposalSeguimientoPatch);
+  const updated = await updateProposalSeguimiento(id, body as LocalProposalSeguimientoPatch);
   if (!updated) {
     return NextResponse.json({ error: "Propuesta local no encontrada." }, { status: 404 });
   }
