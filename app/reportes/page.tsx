@@ -31,9 +31,46 @@ export default function ReportesPage() {
         />
       </div>
 
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+        <StatCard
+          title="Descartes por intermediación sin acceso"
+          value={reportData.indicadoresClave.descartesPorIntermediacionSinAcceso}
+        />
+        <StatCard title="Propuestas sin CIS" value={reportData.indicadoresClave.propuestasSinCIS} />
+        <StatCard
+          title="Documentación incompleta"
+          value={reportData.indicadoresClave.propuestasConDocumentacionIncompleta}
+        />
+        <StatCard
+          title="Inconsistencias documentales"
+          value={reportData.indicadoresClave.propuestasConInconsistenciasDocumentales}
+          variant="warning"
+        />
+        <StatCard
+          title="Listas para Fernando/Liliana"
+          value={reportData.indicadoresClave.oportunidadesListasParaFernandoLiliana}
+          variant="success"
+        />
+        <StatCard
+          title="Ganadas — remuneración percibida"
+          value={reportData.indicadoresClave.operacionesGanadasConRemuneracionPercibida}
+          subtitle="Solo cuenta si GAWER cobró"
+          variant="success"
+        />
+        <StatCard
+          title="Perdidas por requisitos mínimos"
+          value={reportData.indicadoresClave.operacionesPerdidasPorRequisitosMinimos}
+        />
+        <StatCard
+          title="Descartadas — falsedad o falta de info"
+          value={reportData.indicadoresClave.operacionesDescartadasPorFalsedadOFaltaInfo}
+          variant="danger"
+        />
+      </div>
+
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <section className="rounded-lg border border-gawer-gray-200 bg-white p-6 shadow-sm">
-          <h2 className="text-sm font-semibold text-gawer-charcoal mb-4">Propuestas por área</h2>
+          <h2 className="text-sm font-semibold text-gawer-charcoal mb-4">Propuestas por subárea</h2>
           <div className="space-y-3">
             {reportData.propuestasPorArea.map((item) => (
               <div key={item.area}>

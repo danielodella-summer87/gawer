@@ -26,8 +26,9 @@ export default function BaseConocimientoPage() {
       <div className="mb-6 flex items-start gap-3 rounded-lg border border-gawer-green/30 bg-gawer-green/5 p-4">
         <Shield className="h-5 w-5 text-gawer-green shrink-0 mt-0.5" />
         <p className="text-sm text-gawer-charcoal">
-          <span className="font-semibold">Importante:</span> La IA solo debe usar como criterio fuerte información marcada como{" "}
-          <span className="font-semibold text-gawer-green">Validada por GAWER</span>.
+          <span className="font-semibold">Importante:</span> la IA solo debe usar como criterio fuerte los ítems marcados como{" "}
+          <span className="font-semibold text-gawer-green">Validado por Fernando</span>. Los cambios en prompts, reglas o
+          criterios de IA los aprueba Fernando, con consenso del equipo GAWER.
         </p>
       </div>
 
@@ -44,16 +45,19 @@ export default function BaseConocimientoPage() {
           </thead>
           <tbody className="divide-y divide-gawer-gray-100">
             {knowledgeItems.map((item) => (
-              <tr key={item.id} className="hover:bg-gawer-gray-50/50">
-                <td className="px-4 py-3 font-medium text-gawer-charcoal">{item.titulo}</td>
+              <tr key={item.id} className="hover:bg-gawer-gray-50/50 align-top">
                 <td className="px-4 py-3">
-                  <span className="rounded-md bg-gawer-gray-100 px-2 py-0.5 text-xs text-gawer-gray-600">
+                  <p className="font-medium text-gawer-charcoal">{item.titulo}</p>
+                  <p className="text-xs text-gawer-gray-500 mt-1 max-w-md leading-relaxed">{item.resumen}</p>
+                </td>
+                <td className="px-4 py-3">
+                  <span className="rounded-md bg-gawer-gray-100 px-2 py-0.5 text-xs text-gawer-gray-600 whitespace-nowrap">
                     {item.categoria}
                   </span>
                 </td>
                 <td className="px-4 py-3"><StatusBadge status={item.estado} /></td>
-                <td className="px-4 py-3 text-gawer-gray-600">{item.responsable}</td>
-                <td className="px-4 py-3 text-gawer-gray-500">{item.ultimaActualizacion}</td>
+                <td className="px-4 py-3 text-gawer-gray-600 whitespace-nowrap">{item.responsable}</td>
+                <td className="px-4 py-3 text-gawer-gray-500 whitespace-nowrap">{item.ultimaActualizacion}</td>
               </tr>
             ))}
           </tbody>

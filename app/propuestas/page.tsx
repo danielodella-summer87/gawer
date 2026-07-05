@@ -2,40 +2,49 @@
 
 import { useState, useMemo } from "react";
 import Link from "next/link";
-import { Plus, X } from "lucide-react";
+import { Plus, X, Siren } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
 import { SectionHeader } from "@/components/SectionHeader";
 import { RiskBadge } from "@/components/RiskBadge";
 import { ScoreBadge } from "@/components/ScoreBadge";
 import { StatusBadge } from "@/components/StatusBadge";
 import { proposals, formatCurrency, commercialStates } from "@/lib/mock/gawerData";
-import type { RiskLevel } from "@/lib/mock/gawerData";
+import type { RiskLevel, AccesoPrincipal, NivelIntermediacion, CisEstado } from "@/lib/mock/gawerData";
 
 const areas = [...new Set(proposals.map((p) => p.areaNegocio))];
 const riesgos: RiskLevel[] = ["Bajo", "Medio", "Alto", "Crítico"];
+const accesos: AccesoPrincipal[] = ["Confirmado", "No confirmado", "Desconocido"];
+const cadenas: NivelIntermediacion[] = ["Baja", "Media", "Alta", "Crítica"];
+const cisOpciones: CisEstado[] = ["Recibido", "Pendiente"];
 
 export default function PropuestasPage() {
   const [showModal, setShowModal] = useState(false);
   const [filterEstado, setFilterEstado] = useState<string>("");
   const [filterArea, setFilterArea] = useState<string>("");
   const [filterRiesgo, setFilterRiesgo] = useState<string>("");
-  const [filterScoreMin, setFilterScoreMin] = useState<string>("");
+  const [filterCis, setFilterCis] = useState<string>("");
+  const [filterAcceso, setFilterAcceso] = useState<string>("");
+  const [filterCadena, setFilterCadena] = useState<string>("");
+  const [filterAlertaCritica, setFilterAlertaCritica] = useState(false);
 
   const filtered = useMemo(() => {
     return proposals.filter((p) => {
       if (filterEstado && p.estado !== filterEstado) return false;
       if (filterArea && p.areaNegocio !== filterArea) return false;
       if (filterRiesgo && p.riesgo !== filterRiesgo) return false;
-      if (filterScoreMin && p.score < Number(filterScoreMin)) return false;
+      if (filterCis && p.cis !== filterCis) return false;
+      if (filterAcceso && p.accesoDirectoPrincipal !== filterAcceso) return false;
+      if (filterCadena && p.cadenaIntermediacion !== filterCadena) return false;
+      if (filterAlertaCritica && !p.alertaCritica) return false;
       return true;
     });
-  }, [filterEstado, filterArea, filterRiesgo, filterScoreMin]);
+  }, [filterEstado, filterArea, filterRiesgo, filterCis, filterAcceso, filterCadena, filterAlertaCritica]);
 
   return (
     <AppShell topbarTitle="Gestión comercial">
       <SectionHeader
         title="Propuestas"
-        description="Listado de propuestas comerciales recibidas y en evaluación"
+        description="GAWER descarta aproximadamente el 90% de las propuestas recibidas, principalmente por intermediarios sin acceso directo al titular del negocio."
         action={
           <button
             type="button"
@@ -65,9 +74,42 @@ export default function PropuestasPage() {
           onChange={(e) => setFilterArea(e.target.value)}
           className="h-9 rounded-md border border-gawer-gray-200 bg-white px-3 text-sm text-gawer-gray-700 focus:border-gawer-petrol focus:outline-none"
         >
-          <option value="">Todas las áreas</option>
+          <option value="">Todas las subáreas</option>
           {areas.map((a) => (
             <option key={a} value={a}>{a}</option>
+          ))}
+        </select>
+
+        <select
+          value={filterCis}
+          onChange={(e) => setFilterCis(e.target.value)}
+          className="h-9 rounded-md border border-gawer-gray-200 bg-white px-3 text-sm text-gawer-gray-700 focus:border-gawer-petrol focus:outline-none"
+        >
+          <option value="">CIS: todos</option>
+          {cisOpciones.map((c) => (
+            <option key={c} value={c}>CIS {c.toLowerCase()}</option>
+          ))}
+        </select>
+
+        <select
+          value={filterAcceso}
+          onChange={(e) => setFilterAcceso(e.target.value)}
+          className="h-9 rounded-md border border-gawer-gray-200 bg-white px-3 text-sm text-gawer-gray-700 focus:border-gawer-petrol focus:outline-none"
+        >
+          <option value="">Acceso directo: todos</option>
+          {accesos.map((a) => (
+            <option key={a} value={a}>{a}</option>
+          ))}
+        </select>
+
+        <select
+          value={filterCadena}
+          onChange={(e) => setFilterCadena(e.target.value)}
+          className="h-9 rounded-md border border-gawer-gray-200 bg-white px-3 text-sm text-gawer-gray-700 focus:border-gawer-petrol focus:outline-none"
+        >
+          <option value="">Cadena de intermediación: todas</option>
+          {cadenas.map((c) => (
+            <option key={c} value={c}>{c}</option>
           ))}
         </select>
 
@@ -82,17 +124,18 @@ export default function PropuestasPage() {
           ))}
         </select>
 
-        <select
-          value={filterScoreMin}
-          onChange={(e) => setFilterScoreMin(e.target.value)}
-          className="h-9 rounded-md border border-gawer-gray-200 bg-white px-3 text-sm text-gawer-gray-700 focus:border-gawer-petrol focus:outline-none"
+        <button
+          type="button"
+          onClick={() => setFilterAlertaCritica((v) => !v)}
+          className={`inline-flex items-center gap-1.5 rounded-md border px-3 h-9 text-sm font-medium transition-colors ${
+            filterAlertaCritica
+              ? "border-red-300 bg-red-50 text-red-700"
+              : "border-gawer-gray-200 bg-white text-gawer-gray-600 hover:bg-gawer-gray-50"
+          }`}
         >
-          <option value="">Score mínimo</option>
-          <option value="85">85+ Prioritaria</option>
-          <option value="70">70+ Interesante</option>
-          <option value="50">50+ Requiere info</option>
-          <option value="30">30+ Débil</option>
-        </select>
+          <Siren className="h-4 w-4" />
+          Solo alertas críticas
+        </button>
       </div>
 
       <div className="rounded-lg border border-gawer-gray-200 bg-white shadow-sm overflow-hidden">
@@ -101,8 +144,11 @@ export default function PropuestasPage() {
             <thead>
               <tr className="border-b border-gawer-gray-200 bg-gawer-gray-50">
                 <th className="px-4 py-3 text-left font-medium text-gawer-gray-600">Empresa</th>
-                <th className="px-4 py-3 text-left font-medium text-gawer-gray-600">Área</th>
+                <th className="px-4 py-3 text-left font-medium text-gawer-gray-600">Subárea</th>
                 <th className="px-4 py-3 text-left font-medium text-gawer-gray-600">Monto</th>
+                <th className="px-4 py-3 text-left font-medium text-gawer-gray-600">CIS</th>
+                <th className="px-4 py-3 text-left font-medium text-gawer-gray-600">Acceso directo</th>
+                <th className="px-4 py-3 text-left font-medium text-gawer-gray-600">Cadena interm.</th>
                 <th className="px-4 py-3 text-left font-medium text-gawer-gray-600">Score</th>
                 <th className="px-4 py-3 text-left font-medium text-gawer-gray-600">Riesgo</th>
                 <th className="px-4 py-3 text-left font-medium text-gawer-gray-600">Estado</th>
@@ -113,17 +159,23 @@ export default function PropuestasPage() {
               {filtered.map((p) => (
                 <tr key={p.id} className="hover:bg-gawer-gray-50/50">
                   <td className="px-4 py-3">
-                    <p className="font-medium text-gawer-charcoal">{p.empresa}</p>
+                    <div className="flex items-center gap-1.5">
+                      <p className="font-medium text-gawer-charcoal">{p.empresa}</p>
+                      {p.alertaCritica && <Siren className="h-3.5 w-3.5 text-red-600" />}
+                    </div>
                     <p className="text-xs text-gawer-gray-500">{p.proponente}</p>
                   </td>
                   <td className="px-4 py-3 text-gawer-gray-700">{p.areaNegocio}</td>
                   <td className="px-4 py-3 font-medium">{formatCurrency(p.montoEstimado, p.moneda)}</td>
+                  <td className="px-4 py-3"><StatusBadge status={p.cis} /></td>
+                  <td className="px-4 py-3"><StatusBadge status={p.accesoDirectoPrincipal} /></td>
+                  <td className="px-4 py-3"><StatusBadge status={p.cadenaIntermediacion} /></td>
                   <td className="px-4 py-3"><ScoreBadge score={p.score} size="sm" /></td>
                   <td className="px-4 py-3"><RiskBadge level={p.riesgo} /></td>
                   <td className="px-4 py-3"><StatusBadge status={p.estado} /></td>
                   <td className="px-4 py-3">
                     <Link href={`/propuestas/${p.id}`} className="text-sm font-medium text-gawer-petrol hover:text-gawer-green">
-                      Ver análisis
+                      Ver ficha
                     </Link>
                   </td>
                 </tr>
@@ -171,9 +223,9 @@ export default function PropuestasPage() {
                 ))}
               </div>
               <div>
-                <label className="block text-sm font-medium text-gawer-gray-700 mb-1">Área de negocio</label>
+                <label className="block text-sm font-medium text-gawer-gray-700 mb-1">Subárea de negocio</label>
                 <select className="w-full rounded-md border border-gawer-gray-200 px-3 py-2 text-sm" disabled>
-                  <option>Seleccionar área...</option>
+                  <option>Seleccionar subárea...</option>
                   {areas.map((a) => <option key={a}>{a}</option>)}
                 </select>
               </div>
@@ -181,9 +233,23 @@ export default function PropuestasPage() {
                 <label className="block text-sm font-medium text-gawer-gray-700 mb-1">Descripción de la propuesta</label>
                 <textarea rows={3} className="w-full rounded-md border border-gawer-gray-200 px-3 py-2 text-sm" readOnly />
               </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gawer-gray-700 mb-1">¿Presenta CIS / Hoja de Información Corporativa?</label>
+                  <select className="w-full rounded-md border border-gawer-gray-200 px-3 py-2 text-sm" disabled>
+                    <option>Recibido</option><option>Pendiente</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gawer-gray-700 mb-1">¿Acceso directo al titular del negocio?</label>
+                  <select className="w-full rounded-md border border-gawer-gray-200 px-3 py-2 text-sm" disabled>
+                    <option>Confirmado</option><option>No confirmado</option><option>Desconocido</option>
+                  </select>
+                </div>
+              </div>
               <div>
                 <label className="block text-sm font-medium text-gawer-gray-700 mb-1">Documentos disponibles</label>
-                <input type="text" placeholder="LOI, CIS, KYC..." className="w-full rounded-md border border-gawer-gray-200 px-3 py-2 text-sm" readOnly />
+                <input type="text" placeholder="CIS, LOI, evidencia bancaria..." className="w-full rounded-md border border-gawer-gray-200 px-3 py-2 text-sm" readOnly />
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
