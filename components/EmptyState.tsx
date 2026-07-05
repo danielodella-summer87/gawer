@@ -3,9 +3,10 @@ import { FileQuestion } from "lucide-react";
 interface EmptyStateProps {
   title: string;
   description?: string;
+  action?: React.ReactNode;
 }
 
-export function EmptyState({ title, description }: EmptyStateProps) {
+export function EmptyState({ title, description, action }: EmptyStateProps) {
   return (
     <div className="flex flex-col items-center justify-center rounded-lg border border-dashed border-gawer-gray-300 bg-white py-16 px-6 text-center">
       <div className="rounded-full bg-gawer-gray-100 p-3 mb-4">
@@ -15,6 +16,7 @@ export function EmptyState({ title, description }: EmptyStateProps) {
       {description && (
         <p className="mt-1 text-sm text-gawer-gray-500 max-w-sm">{description}</p>
       )}
+      {action && <div className="mt-4">{action}</div>}
     </div>
   );
 }

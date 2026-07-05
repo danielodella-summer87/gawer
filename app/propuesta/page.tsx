@@ -10,6 +10,8 @@ import {
   Building2,
   Users2,
   FileText,
+  AlertTriangle,
+  FlaskConical,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
@@ -22,6 +24,7 @@ import {
   documentChecklistOptions,
   mtnHsbcLtnOptions,
 } from "@/lib/mock/gawerData";
+import type { LocalProposal } from "@/lib/local/proposalsStore";
 
 const initialForm = {
   nombreCompleto: "",
@@ -54,49 +57,6 @@ const initialForm = {
 };
 
 type FormState = typeof initialForm;
-
-function getRiesgoPreliminar(form: FormState): { nivel: string; motivo: string } {
-  if (form.mtnHsbcLtn === "Sí") {
-    return {
-      nivel: "Crítico",
-      motivo: "Instrumento MTN HSBC / LTN brasilera — regla crítica validada por GAWER.",
-    };
-  }
-  if (form.accesoDirecto === "No" || form.cantidadIntermediarios === "3 o más") {
-    return {
-      nivel: "Alto",
-      motivo: "Sin acceso directo confirmado al titular o cadena de intermediación extensa.",
-    };
-  }
-  if (
-    form.accesoDirecto === "Parcial" ||
-    form.accesoDirecto === "No lo sé" ||
-    form.cantidadIntermediarios === "2" ||
-    form.mandato === "No"
-  ) {
-    return {
-      nivel: "Medio",
-      motivo: "Acceso al principal o mandato aún no confirmados de forma completa.",
-    };
-  }
-  if (form.accesoDirecto === "Sí" && form.documentos[documentChecklistOptions[0]]) {
-    return { nivel: "Bajo", motivo: "Acceso directo confirmado y CIS disponible." };
-  }
-  return { nivel: "Medio", motivo: "Información inicial parcial — requiere completar documentación." };
-}
-
-function getProximaAccionSugerida(form: FormState, riesgo: string): string {
-  if (riesgo === "Crítico") {
-    return "No avanzar — aplica regla crítica validada por GAWER. Queda sujeto a revisión excepcional del equipo.";
-  }
-  if (!form.documentos[documentChecklistOptions[0]]) {
-    return "Completar el CIS / Hoja de Información Corporativa antes de continuar.";
-  }
-  if (riesgo === "Alto") {
-    return "El equipo comercial validará el acceso directo al principal antes de avanzar.";
-  }
-  return "El equipo comercial de GAWER revisará la propuesta y se pondrá en contacto para los próximos pasos.";
-}
 
 function Field({
   label,
@@ -193,7 +153,9 @@ function SectionCard({
 
 export default function PropuestaPublicaPage() {
   const [form, setForm] = useState<FormState>(initialForm);
-  const [submitted, setSubmitted] = useState(false);
+  const [submittedProposal, setSubmittedProposal] = useState<LocalProposal | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
 
   function set<K extends keyof FormState>(key: K, value: FormState[K]) {
     setForm((f) => ({ ...f, [key]: value }));
@@ -203,20 +165,37 @@ export default function PropuestaPublicaPage() {
     setForm((f) => ({ ...f, documentos: { ...f.documentos, [doc]: !f.documentos[doc] } }));
   }
 
-  function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    setSubmitted(true);
-    if (typeof window !== "undefined") window.scrollTo({ top: 0, behavior: "smooth" });
+    setSubmitError(null);
+    setIsSubmitting(true);
+    try {
+      const res = await fetch("/api/local/proposals", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(form),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setSubmitError(data?.error ?? "No se pudo guardar la propuesta. Intente nuevamente.");
+        return;
+      }
+      setSubmittedProposal(data.proposal as LocalProposal);
+      if (typeof window !== "undefined") window.scrollTo({ top: 0, behavior: "smooth" });
+    } catch {
+      setSubmitError(
+        "No se pudo conectar con el entorno local de desarrollo. Verifique que el servidor esté corriendo."
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
   }
 
   function handleReset() {
     setForm(initialForm);
-    setSubmitted(false);
+    setSubmittedProposal(null);
+    setSubmitError(null);
   }
-
-  const riesgo = getRiesgoPreliminar(form);
-  const proximaAccion = getProximaAccionSugerida(form, riesgo.nivel);
-  const documentosDisponibles = documentChecklistOptions.filter((d) => form.documentos[d]);
 
   return (
     <div className="min-h-screen bg-gawer-gray-50">
@@ -261,31 +240,49 @@ export default function PropuestaPublicaPage() {
           </p>
         </section>
 
-        {submitted ? (
+        <section className="flex items-start gap-3 rounded-lg border border-gawer-gold/30 bg-gawer-gold/10 p-4">
+          <FlaskConical className="h-4 w-4 text-gawer-gold shrink-0 mt-0.5" />
+          <p className="text-xs text-gawer-gray-700">
+            Persistencia local de desarrollo. Esta propuesta se guarda únicamente en el entorno local de
+            GAWER Intelligence para validar el flujo — no usar como almacenamiento productivo.
+          </p>
+        </section>
+
+        {submitError && (
+          <section className="flex items-start gap-3 rounded-lg border border-red-200 bg-red-50 p-4">
+            <AlertTriangle className="h-4 w-4 text-red-600 shrink-0 mt-0.5" />
+            <p className="text-sm text-red-800">{submitError}</p>
+          </section>
+        )}
+
+        {submittedProposal ? (
           <section className="rounded-lg border border-gawer-green/30 bg-gawer-green/5 p-6">
             <div className="mb-3 flex items-center gap-2">
               <CheckCircle2 className="h-5 w-5 text-gawer-green" />
               <h2 className="text-lg font-semibold text-gawer-charcoal">
-                Propuesta recibida (modo demostración)
+                Propuesta guardada en entorno local
               </h2>
             </div>
-            <p className="text-sm text-gawer-charcoal mb-5 leading-relaxed">
-              Propuesta recibida en modo demostración. En la versión operativa, esta información será
-              enviada al equipo de GAWER para su análisis preliminar.
+            <p className="text-sm text-gawer-charcoal mb-1 leading-relaxed">
+              Propuesta guardada en entorno local. En esta fase la información se almacena únicamente en
+              el entorno de desarrollo para validar el flujo con GAWER.
+            </p>
+            <p className="text-xs text-gawer-gray-500 mb-5">
+              ID de propuesta local: <span className="font-mono font-medium text-gawer-charcoal">{submittedProposal.id}</span>
             </p>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
               <div className="rounded-md bg-white border border-gawer-gray-100 p-3">
                 <p className="text-[10px] uppercase tracking-wider text-gawer-gray-400">Tipo de operación</p>
-                <p className="font-medium text-gawer-charcoal mt-0.5">{form.areaNegocio || "No especificado"}</p>
+                <p className="font-medium text-gawer-charcoal mt-0.5">{submittedProposal.input.areaNegocio || "No especificado"}</p>
               </div>
               <div className="rounded-md bg-white border border-gawer-gray-100 p-3">
                 <p className="text-[10px] uppercase tracking-wider text-gawer-gray-400">Acceso al principal</p>
-                <p className="font-medium text-gawer-charcoal mt-0.5">{form.accesoDirecto || "No especificado"}</p>
+                <p className="font-medium text-gawer-charcoal mt-0.5">{submittedProposal.input.accesoDirecto || "No especificado"}</p>
               </div>
               <div className="rounded-md bg-white border border-gawer-gray-100 p-3">
                 <p className="text-[10px] uppercase tracking-wider text-gawer-gray-400">CIS</p>
                 <p className="font-medium text-gawer-charcoal mt-0.5">
-                  {form.documentos[documentChecklistOptions[0]] ? "Disponible" : "Pendiente"}
+                  {submittedProposal.input.documentos[documentChecklistOptions[0]] ? "Disponible" : "Pendiente"}
                 </p>
               </div>
               <div className="rounded-md bg-white border border-gawer-gray-100 p-3">
@@ -293,26 +290,43 @@ export default function PropuestaPublicaPage() {
                   Documentación inicial disponible
                 </p>
                 <p className="font-medium text-gawer-charcoal mt-0.5">
-                  {documentosDisponibles.length} de {documentChecklistOptions.length} ítems marcados
+                  {Object.values(submittedProposal.input.documentos).filter(Boolean).length} de{" "}
+                  {documentChecklistOptions.length} ítems marcados
                 </p>
               </div>
               <div className="rounded-md bg-white border border-gawer-gray-100 p-3">
                 <p className="text-[10px] uppercase tracking-wider text-gawer-gray-400">Riesgo preliminar sugerido</p>
-                <p className="font-medium text-gawer-charcoal mt-0.5">{riesgo.nivel}</p>
-                <p className="text-xs text-gawer-gray-500 mt-1">{riesgo.motivo}</p>
+                <p className="font-medium text-gawer-charcoal mt-0.5">{submittedProposal.assessment.riesgo}</p>
+                <p className="text-xs text-gawer-gray-500 mt-1">Score: {submittedProposal.assessment.score}/100</p>
               </div>
               <div className="rounded-md bg-white border border-gawer-gray-100 p-3">
-                <p className="text-[10px] uppercase tracking-wider text-gawer-gray-400">Próxima acción sugerida</p>
-                <p className="font-medium text-gawer-charcoal mt-0.5">{proximaAccion}</p>
+                <p className="text-[10px] uppercase tracking-wider text-gawer-gray-400">Estado sugerido</p>
+                <p className="font-medium text-gawer-charcoal mt-0.5">{submittedProposal.assessment.estadoSugerido}</p>
               </div>
             </div>
-            <button
-              type="button"
-              onClick={handleReset}
-              className="mt-5 text-sm font-medium text-gawer-petrol hover:text-gawer-green"
-            >
-              ← Completar otra propuesta (mock)
-            </button>
+            <div className="mt-3 rounded-md bg-white border border-gawer-gray-100 p-3">
+              <p className="text-[10px] uppercase tracking-wider text-gawer-gray-400 mb-1">Razones del score (explicable, sin IA)</p>
+              <ul className="space-y-0.5">
+                {submittedProposal.assessment.razones.map((r, i) => (
+                  <li key={i} className="text-xs text-gawer-gray-600">• {r}</li>
+                ))}
+              </ul>
+            </div>
+            <div className="mt-5 flex flex-wrap items-center gap-4">
+              <Link
+                href={`/propuestas/${submittedProposal.id}`}
+                className="text-sm font-medium text-gawer-petrol hover:text-gawer-green"
+              >
+                Ver ficha de esta propuesta →
+              </Link>
+              <button
+                type="button"
+                onClick={handleReset}
+                className="text-sm font-medium text-gawer-gray-500 hover:text-gawer-charcoal"
+              >
+                ← Completar otra propuesta
+              </button>
+            </div>
           </section>
         ) : (
           <form onSubmit={handleSubmit} className="space-y-6">
@@ -569,14 +583,14 @@ export default function PropuestaPublicaPage() {
             <div className="flex flex-col items-start gap-2">
               <button
                 type="submit"
-                disabled={!form.declaracionVeracidad || !form.declaracionSinCompromiso}
+                disabled={!form.declaracionVeracidad || !form.declaracionSinCompromiso || isSubmitting}
                 className="w-full sm:w-auto rounded-md bg-gawer-green px-6 py-3 text-sm font-semibold text-white hover:bg-gawer-green-light disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
               >
-                Enviar propuesta para evaluación preliminar
+                {isSubmitting ? "Guardando..." : "Enviar propuesta para evaluación preliminar"}
               </button>
               <p className="text-xs text-gawer-gray-500">
-                Este formulario funciona en modo demostración: no se guarda información real ni se envía a
-                ningún sistema externo.
+                Este formulario guarda la propuesta en la persistencia local de desarrollo (entorno
+                localhost). No se envía a ningún sistema externo ni servicio de terceros.
               </p>
             </div>
           </form>

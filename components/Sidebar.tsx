@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import {
   LayoutDashboard,
   FileText,
+  Inbox,
   Trophy,
   Building2,
   BookOpen,
@@ -17,6 +18,7 @@ import {
   ChevronsLeft,
   ChevronsRight,
   Globe,
+  ClipboardCheck,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useSidebar } from "./SidebarState";
@@ -24,6 +26,7 @@ import { useSidebar } from "./SidebarState";
 const navItems = [
   { href: "/", label: "Dashboard", icon: LayoutDashboard },
   { href: "/propuestas", label: "Propuestas", icon: FileText },
+  { href: "/bandeja", label: "Bandeja operativa", icon: Inbox },
   { href: "/ranking", label: "Ranking", icon: Trophy },
   { href: "/areas-negocio", label: "Áreas de negocio", icon: Building2 },
   { href: "/base-conocimiento", label: "Base de conocimiento", icon: BookOpen },
@@ -32,6 +35,7 @@ const navItems = [
   { href: "/documentos", label: "Documentos", icon: FolderOpen },
   { href: "/mesa-ayuda", label: "Mesa de ayuda", icon: LifeBuoy },
   { href: "/reportes", label: "Reportes", icon: BarChart3 },
+  { href: "/demo-local", label: "Demo local", icon: ClipboardCheck },
   { href: "/configuracion", label: "Configuración", icon: Settings },
 ];
 
