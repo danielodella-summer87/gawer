@@ -18,6 +18,7 @@ import {
   ChevronsLeft,
   ChevronsRight,
   Globe,
+  ClipboardCheck,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useSidebar } from "./SidebarState";
@@ -34,6 +35,7 @@ const navItems = [
   { href: "/documentos", label: "Documentos", icon: FolderOpen },
   { href: "/mesa-ayuda", label: "Mesa de ayuda", icon: LifeBuoy },
   { href: "/reportes", label: "Reportes", icon: BarChart3 },
+  { href: "/demo-local", label: "Demo local", icon: ClipboardCheck },
   { href: "/configuracion", label: "Configuración", icon: Settings },
 ];
 
