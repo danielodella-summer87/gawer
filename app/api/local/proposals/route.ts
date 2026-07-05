@@ -29,16 +29,25 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Payload inválido." }, { status: 400 });
   }
 
+  // Campos obligatorios reales del formulario público (deben coincidir con los asteriscos
+  // mostrados en app/propuesta/page.tsx).
   const missing: string[] = [];
-  if (!body.nombreCompleto?.trim()) missing.push("nombre completo");
-  if (!body.email?.trim()) missing.push("email");
-  if (!body.areaNegocio?.trim()) missing.push("área de negocio");
-  if (!body.descripcionOperacion?.trim()) missing.push("descripción de la operación");
+  if (!body.nombreCompleto?.trim()) missing.push("Nombre completo");
+  if (!body.empresa?.trim()) missing.push("Empresa");
+  if (!body.email?.trim()) missing.push("Email");
+  if (!body.areaNegocio?.trim()) missing.push("Área de negocio");
+  if (!body.descripcionOperacion?.trim()) missing.push("Descripción breve de la operación");
   if (!body.declaracionVeracidad || !body.declaracionSinCompromiso) {
-    missing.push("aceptación de la declaración");
+    missing.push("Aceptación de la declaración");
   }
 
-  if (missing.length > 0) {
+  if (missing.length === 1) {
+    return NextResponse.json(
+      { error: `Falta completar el campo obligatorio: ${missing[0]}.` },
+      { status: 400 }
+    );
+  }
+  if (missing.length > 1) {
     return NextResponse.json(
       { error: `Faltan campos obligatorios: ${missing.join(", ")}.` },
       { status: 400 }

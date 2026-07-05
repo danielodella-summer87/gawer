@@ -393,7 +393,6 @@ export default function PropuestaPublicaPage() {
               </div>
               <Field
                 label="Tipo de proponente"
-                required
                 helper="Ayuda a GAWER a entender rápidamente su rol en la operación."
               >
                 <RadioPills
@@ -410,7 +409,7 @@ export default function PropuestaPublicaPage() {
               title="Acceso al principal"
               description="La principal causa de descarte de GAWER es la intermediación sin acceso directo al titular del negocio."
             >
-              <Field label="¿Tiene acceso directo al titular principal de la operación?" required>
+              <Field label="¿Tiene acceso directo al titular principal de la operación?">
                 <RadioPills
                   name="accesoDirecto"
                   options={accessDirectoOptions}
@@ -461,8 +460,9 @@ export default function PropuestaPublicaPage() {
                   ))}
                 </select>
               </Field>
-              <Field label="Descripción breve de la operación">
+              <Field label="Descripción breve de la operación" required>
                 <textarea
+                  required
                   rows={3}
                   value={form.descripcionOperacion}
                   onChange={(e) => set("descripcionOperacion", e.target.value)}
@@ -583,6 +583,7 @@ export default function PropuestaPublicaPage() {
                   className="mt-1 h-4 w-4 rounded border-gawer-gray-300 text-gawer-green focus:ring-gawer-green"
                 />
                 <span className="text-sm text-gawer-gray-700">
+                  <span className="text-red-500 font-semibold mr-1">*</span>
                   Declaro que la información presentada es correcta según mi conocimiento y que cuento con
                   autorización para compartirla con GAWER.
                 </span>
@@ -596,6 +597,7 @@ export default function PropuestaPublicaPage() {
                   className="mt-1 h-4 w-4 rounded border-gawer-gray-300 text-gawer-green focus:ring-gawer-green"
                 />
                 <span className="text-sm text-gawer-gray-700">
+                  <span className="text-red-500 font-semibold mr-1">*</span>
                   Entiendo que el envío de esta propuesta no implica aceptación, aprobación ni compromiso
                   comercial por parte de GAWER.
                 </span>
