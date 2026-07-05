@@ -23,6 +23,7 @@ const statusColors: Record<string, string> = {
   "Requiere revisión humana": "bg-purple-50 text-purple-800 border-purple-200",
   "Validado preliminarmente": "bg-cyan-50 text-cyan-800 border-cyan-200",
   "No suficiente por sí solo": "bg-red-50 text-red-700 border-red-200",
+  "No aplica": "bg-gawer-gray-100 text-gawer-gray-500 border-gawer-gray-300",
 
   // Base de conocimiento
   Borrador: "bg-gawer-gray-100 text-gawer-gray-600 border-gawer-gray-300",

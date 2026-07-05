@@ -15,6 +15,7 @@ import {
   calculateLocalProposalAssessment,
   type LocalProposalInput,
 } from "@/lib/local/proposalAssessment";
+import { generateDocumentChecklist } from "@/lib/local/documentChecklist";
 
 export async function GET() {
   const proposals = await readLocalProposals();
@@ -68,6 +69,7 @@ export async function POST(request: Request) {
         label: "Propuesta recibida desde formulario público local",
       },
     ],
+    documentChecklist: generateDocumentChecklist(input),
   };
 
   await appendLocalProposal(proposal);

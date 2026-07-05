@@ -27,6 +27,7 @@ import {
 } from "@/lib/mock/gawerData";
 import { getLocalProposalById, type LocalProposal } from "@/lib/local/proposalsStore";
 import { LocalFollowUpPanel } from "@/components/LocalFollowUpPanel";
+import { LocalDocumentChecklistPanel } from "@/components/LocalDocumentChecklistPanel";
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -104,6 +105,13 @@ function LocalProposalDetail({ proposal }: { proposal: LocalProposal }) {
           proposalId={proposal.id}
           initialSeguimiento={proposal.seguimiento}
           initialHistorial={proposal.historial}
+        />
+      </div>
+
+      <div className="mb-8">
+        <LocalDocumentChecklistPanel
+          proposalId={proposal.id}
+          initialChecklist={proposal.documentChecklist}
         />
       </div>
 

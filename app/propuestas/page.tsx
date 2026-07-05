@@ -11,6 +11,7 @@ import { StatusBadge } from "@/components/StatusBadge";
 import { proposals, formatCurrency, commercialStates, documentChecklistOptions } from "@/lib/mock/gawerData";
 import type { RiskLevel, AccesoPrincipal, NivelIntermediacion, CisEstado } from "@/lib/mock/gawerData";
 import type { LocalProposal } from "@/lib/local/proposalsStore";
+import { summarizeChecklist } from "@/lib/local/documentChecklist";
 
 const riesgos: RiskLevel[] = ["Bajo", "Medio", "Alto", "Crítico"];
 const accesos: AccesoPrincipal[] = ["Confirmado", "No confirmado", "Desconocido"];
@@ -37,6 +38,7 @@ interface DisplayRow {
   recomendacionPreliminar?: string;
   responsable?: string;
   proximaAccion?: string;
+  documentacionNivel?: string;
 }
 
 function mapAccesoDirecto(v: string): AccesoPrincipal {
@@ -69,8 +71,17 @@ const mockRows: DisplayRow[] = proposals.map((p) => ({
   alertaCritica: p.alertaCritica,
 }));
 
+function cisEstadoDesdeChecklist(lp: LocalProposal): CisEstado {
+  const cisItem = lp.documentChecklist?.find((i) => i.id === "cis");
+  if (!cisItem) return lp.input.documentos?.[CIS_KEY] ? "Recibido" : "Pendiente";
+  return cisItem.estado === "Recibido" || cisItem.estado === "Validado preliminarmente"
+    ? "Recibido"
+    : "Pendiente";
+}
+
 function localToRow(lp: LocalProposal): DisplayRow {
   const input = lp.input;
+  const checklistSummary = summarizeChecklist(lp.documentChecklist ?? []);
   return {
     id: lp.id,
     esLocal: true,
@@ -79,7 +90,7 @@ function localToRow(lp: LocalProposal): DisplayRow {
     areaNegocio: input.areaNegocio || "Sin especificar",
     montoEstimado: Number(input.montoEstimado) || 0,
     moneda: input.moneda || "USD",
-    cis: input.documentos?.[CIS_KEY] ? "Recibido" : "Pendiente",
+    cis: cisEstadoDesdeChecklist(lp),
     accesoDirectoPrincipal: mapAccesoDirecto(input.accesoDirecto),
     cadenaIntermediacion: mapCadenaIntermediacion(input.cantidadIntermediarios),
     score: lp.assessment.score,
@@ -89,6 +100,7 @@ function localToRow(lp: LocalProposal): DisplayRow {
     recomendacionPreliminar: lp.assessment.estadoSugerido,
     responsable: lp.seguimiento.responsableInterno || undefined,
     proximaAccion: lp.seguimiento.proximaAccion || undefined,
+    documentacionNivel: checklistSummary.nivelPreparacion,
   };
 }
 
@@ -314,7 +326,14 @@ export default function PropuestasPage() {
                   </td>
                   <td className="px-4 py-3 text-gawer-gray-700">{p.areaNegocio}</td>
                   <td className="px-4 py-3 font-medium">{formatCurrency(p.montoEstimado, p.moneda)}</td>
-                  <td className="px-4 py-3"><StatusBadge status={p.cis} /></td>
+                  <td className="px-4 py-3">
+                    <StatusBadge status={p.cis} />
+                    {p.esLocal && p.documentacionNivel && (
+                      <p className="mt-1 text-[10px] text-gawer-gray-400 whitespace-nowrap">
+                        Documentación: {p.documentacionNivel}
+                      </p>
+                    )}
+                  </td>
                   <td className="px-4 py-3"><StatusBadge status={p.accesoDirectoPrincipal} /></td>
                   <td className="px-4 py-3"><StatusBadge status={p.cadenaIntermediacion} /></td>
                   <td className="px-4 py-3"><ScoreBadge score={p.score} size="sm" /></td>

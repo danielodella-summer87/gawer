@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { FlaskConical, Save, History as HistoryIcon } from "lucide-react";
 import { commercialStates } from "@/lib/mock/gawerData";
 import type { ProposalStatus } from "@/lib/mock/gawerData";
@@ -20,6 +21,7 @@ export function LocalFollowUpPanel({
   initialSeguimiento,
   initialHistorial,
 }: LocalFollowUpPanelProps) {
+  const router = useRouter();
   const [estadoComercial, setEstadoComercial] = useState<ProposalStatus>(
     initialSeguimiento.estadoComercial
   );
@@ -32,6 +34,12 @@ export function LocalFollowUpPanel({
   const [isSaving, setIsSaving] = useState(false);
   const [feedback, setFeedback] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+
+  // Mantiene el historial al día cuando otro bloque de la ficha (ej. checklist documental)
+  // guarda cambios y refresca la página vía router.refresh().
+  useEffect(() => {
+    setHistorial(initialHistorial);
+  }, [initialHistorial]);
 
   async function handleSave() {
     setIsSaving(true);
@@ -56,6 +64,7 @@ export function LocalFollowUpPanel({
       }
       setHistorial(data.proposal.historial);
       setFeedback("Seguimiento guardado en el entorno local.");
+      router.refresh();
     } catch {
       setError("No se pudo conectar con el entorno local de desarrollo.");
     } finally {

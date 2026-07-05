@@ -9,11 +9,12 @@ import { promises as fs } from "fs";
 import path from "path";
 import type { LocalProposalInput, LocalProposalAssessment } from "./proposalAssessment";
 import type { ProposalStatus } from "@/lib/mock/gawerData";
+import { generateDocumentChecklist, type DocumentChecklistItem } from "./documentChecklist";
 
 export interface LocalProposalHistorialEvento {
   id: string;
   at: string;
-  type: "creacion" | "estado" | "responsable" | "proxima_accion" | "nota";
+  type: "creacion" | "estado" | "responsable" | "proxima_accion" | "nota" | "documento";
   label: string;
   details?: string;
 }
@@ -44,6 +45,7 @@ export interface LocalProposal {
   assessment: LocalProposalAssessment;
   seguimiento: LocalProposalSeguimiento;
   historial: LocalProposalHistorialEvento[];
+  documentChecklist: DocumentChecklistItem[];
 }
 
 export function createDefaultSeguimiento(): LocalProposalSeguimiento {
@@ -59,14 +61,18 @@ export function createDefaultSeguimiento(): LocalProposalSeguimiento {
 const DATA_DIR = path.join(process.cwd(), ".local-data", "gawer");
 const DATA_FILE = path.join(DATA_DIR, "proposals.json");
 
-// Normaliza registros guardados antes de agregar seguimiento/historial (fase OPERATIVO-LOCAL-2),
-// para no romper si el archivo local ya tenía propuestas de una fase anterior.
+// Normaliza registros guardados antes de agregar seguimiento/historial/checklist (fases
+// OPERATIVO-LOCAL-2/3), para no romper si el archivo local ya tenía propuestas de una fase anterior.
 function normalize(raw: unknown): LocalProposal[] {
   if (!Array.isArray(raw)) return [];
   return (raw as Partial<LocalProposal>[]).map((p) => ({
     ...(p as LocalProposal),
     seguimiento: p.seguimiento ?? createDefaultSeguimiento(),
     historial: Array.isArray(p.historial) ? p.historial : [],
+    documentChecklist:
+      Array.isArray(p.documentChecklist) && p.documentChecklist.length > 0
+        ? p.documentChecklist
+        : generateDocumentChecklist((p as LocalProposal).input),
   }));
 }
 
@@ -171,6 +177,62 @@ export async function updateLocalProposalSeguimiento(
   const updated: LocalProposal = {
     ...proposal,
     seguimiento: { ...seguimientoActual, ...patch },
+    historial: [...proposal.historial, ...eventos],
+  };
+
+  proposals[index] = updated;
+  await writeLocalProposals(proposals);
+  return updated;
+}
+
+export async function updateLocalProposalDocumentChecklist(
+  id: string,
+  items: DocumentChecklistItem[]
+): Promise<LocalProposal | null> {
+  const proposals = await readLocalProposals();
+  const index = proposals.findIndex((p) => p.id === id);
+  if (index === -1) return null;
+
+  const proposal = proposals[index];
+  const anterior = proposal.documentChecklist;
+  const now = new Date().toISOString();
+
+  const cambios: { nombre: string; estado: string }[] = [];
+  const itemsActualizados = items.map((item) => {
+    const prev = anterior.find((a) => a.id === item.id);
+    const estadoCambio = !prev || prev.estado !== item.estado;
+    const observacionCambio = !prev || prev.observacion !== item.observacion;
+    if (estadoCambio) {
+      cambios.push({ nombre: item.nombre, estado: item.estado });
+    }
+    return {
+      ...item,
+      actualizadoAt: estadoCambio || observacionCambio ? now : item.actualizadoAt,
+    };
+  });
+
+  const eventos: LocalProposalHistorialEvento[] = [];
+  if (cambios.length > 0 && cambios.length <= 3) {
+    cambios.forEach((c, i) => {
+      eventos.push({
+        id: `hist-${Date.now()}-doc-${i}`,
+        at: now,
+        type: "documento",
+        label: `${c.nombre} marcado como ${c.estado}`,
+      });
+    });
+  } else if (cambios.length > 3) {
+    eventos.push({
+      id: `hist-${Date.now()}-doc-resumen`,
+      at: now,
+      type: "documento",
+      label: `Checklist documental actualizado (${cambios.length} documentos)`,
+    });
+  }
+
+  const updated: LocalProposal = {
+    ...proposal,
+    documentChecklist: itemsActualizados,
     historial: [...proposal.historial, ...eventos],
   };
 
