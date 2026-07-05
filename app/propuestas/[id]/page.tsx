@@ -25,7 +25,8 @@ import {
   documents,
   documentChecklistOptions,
 } from "@/lib/mock/gawerData";
-import { getLocalProposalById, type LocalProposal } from "@/lib/local/proposalsStore";
+import type { LocalProposal } from "@/lib/local/proposalsStore";
+import { getProposalById as getRealProposalById } from "@/lib/data/proposalsRepository";
 import { generateExecutiveBriefing } from "@/lib/local/executiveBriefing";
 import { generateProposalResponseDrafts } from "@/lib/local/proposalResponseDrafts";
 import { LocalFollowUpPanel } from "@/components/LocalFollowUpPanel";
@@ -269,9 +270,9 @@ export default async function PropuestaDetailPage({ params }: PageProps) {
   const proposal = getProposalById(id);
 
   if (!proposal) {
-    const localProposal = await getLocalProposalById(id);
-    if (localProposal) {
-      return <LocalProposalDetail proposal={localProposal} />;
+    const realProposal = await getRealProposalById(id);
+    if (realProposal) {
+      return <LocalProposalDetail proposal={realProposal} />;
     }
     notFound();
   }

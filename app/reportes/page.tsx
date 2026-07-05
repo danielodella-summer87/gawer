@@ -7,7 +7,7 @@ import { EmptyState } from "@/components/EmptyState";
 import { StatusBadge } from "@/components/StatusBadge";
 import { RiskBadge } from "@/components/RiskBadge";
 import { reportData } from "@/lib/mock/gawerData";
-import { readLocalProposals } from "@/lib/local/proposalsStore";
+import { readAllProposals } from "@/lib/data/proposalsRepository";
 import { buildLocalReports } from "@/lib/local/localReports";
 
 // Lee .local-data/gawer/proposals.json en cada request — no debe quedar congelado
@@ -19,7 +19,7 @@ export default async function ReportesPage() {
   const maxDescarteCount = Math.max(...reportData.motivosDescarte.map((m) => m.count));
   const maxEstadoCount = Math.max(...reportData.oportunidadesPorEstado.map((e) => e.count));
 
-  const localProposals = await readLocalProposals();
+  const localProposals = await readAllProposals();
   const local = buildLocalReports(localProposals);
   const maxAreaLocal = Math.max(1, ...local.byArea.map((a) => a.count));
   const maxEstadoLocal = Math.max(1, ...local.byEstado.map((e) => e.count));
