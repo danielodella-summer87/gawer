@@ -327,7 +327,6 @@ export default function PropuestasPage() {
                 <th className="px-4 py-3 text-left font-medium text-gawer-gray-600">Score</th>
                 <th className="px-4 py-3 text-left font-medium text-gawer-gray-600">Riesgo</th>
                 <th className="px-4 py-3 text-left font-medium text-gawer-gray-600">Estado</th>
-                <th className="px-4 py-3 text-left font-medium text-gawer-gray-600">Acción</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gawer-gray-100">
@@ -335,7 +334,12 @@ export default function PropuestasPage() {
                 <tr key={p.id} className="hover:bg-gawer-gray-50/50">
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-1.5 flex-wrap">
-                      <p className="font-medium text-gawer-charcoal">{p.empresa}</p>
+                      <Link
+                        href={`/propuestas/${p.id}`}
+                        className="font-medium text-gawer-charcoal hover:text-gawer-petrol hover:underline"
+                      >
+                        {p.empresa}
+                      </Link>
                       {p.alertaCritica && <Siren className="h-3.5 w-3.5 text-red-600" />}
                       {p.esLocal && (
                         <span
@@ -353,6 +357,12 @@ export default function PropuestasPage() {
                     {p.esLocal && p.proximaAccion && (
                       <p className="text-[10px] text-gawer-gray-400">Próxima acción: {p.proximaAccion}</p>
                     )}
+                    <Link
+                      href={`/propuestas/${p.id}`}
+                      className="mt-1 inline-block text-xs font-medium text-gawer-petrol hover:text-gawer-green hover:underline"
+                    >
+                      Abrir ficha →
+                    </Link>
                   </td>
                   <td className="px-4 py-3 text-gawer-gray-700">{p.areaNegocio}</td>
                   <td className="px-4 py-3 font-medium">{formatCurrency(p.montoEstimado, p.moneda)}</td>
@@ -380,11 +390,6 @@ export default function PropuestasPage() {
                         Briefing: {p.briefingReadiness}
                       </p>
                     )}
-                  </td>
-                  <td className="px-4 py-3">
-                    <Link href={`/propuestas/${p.id}`} className="text-sm font-medium text-gawer-petrol hover:text-gawer-green">
-                      Ver ficha
-                    </Link>
                   </td>
                 </tr>
               ))}
