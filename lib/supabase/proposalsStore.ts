@@ -291,6 +291,35 @@ export async function markSupabaseProposalForExecutiveReview(
   return updated;
 }
 
+// Agrega un evento genérico al historial de una propuesta (OPERATIVO-REAL-2). Usado por el
+// flujo de documentos reales (carga, actualización, eliminación) para dejar constancia sin
+// necesitar una función dedicada por cada acción, como sí existen para seguimiento/checklist.
+export async function appendSupabaseProposalHistorialEvent(
+  id: string,
+  event: Pick<LocalProposalHistorialEvento, "type" | "label" | "details">
+): Promise<LocalProposal | null> {
+  const proposal = await getSupabaseProposalById(id);
+  if (!proposal) return null;
+
+  const now = new Date().toISOString();
+  const updated: LocalProposal = {
+    ...proposal,
+    historial: [
+      ...proposal.historial,
+      {
+        id: `hist-${Date.now()}-${event.type}`,
+        at: now,
+        ...event,
+      },
+    ],
+  };
+
+  const client = requireClient();
+  const { error } = await client.from(TABLE).update({ historial: updated.historial }).eq("id", id);
+  if (error) throw tableAccessError(error);
+  return updated;
+}
+
 export async function logSupabaseResponseDraftCopy(
   id: string,
   draftTitle: string

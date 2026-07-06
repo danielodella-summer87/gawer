@@ -33,6 +33,7 @@ import { LocalFollowUpPanel } from "@/components/LocalFollowUpPanel";
 import { LocalDocumentChecklistPanel } from "@/components/LocalDocumentChecklistPanel";
 import { LocalExecutiveBriefingPanel } from "@/components/LocalExecutiveBriefingPanel";
 import { LocalResponseDraftsPanel } from "@/components/LocalResponseDraftsPanel";
+import { ProposalDocumentsPanel } from "@/components/ProposalDocumentsPanel";
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -132,6 +133,10 @@ function LocalProposalDetail({ proposal }: { proposal: LocalProposal }) {
           proposalId={proposal.id}
           initialChecklist={proposal.documentChecklist}
         />
+      </div>
+
+      <div className="mb-8">
+        <ProposalDocumentsPanel proposalId={proposal.id} />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
