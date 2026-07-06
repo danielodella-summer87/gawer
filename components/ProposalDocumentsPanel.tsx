@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { FileText, UploadCloud, Trash2, Download, FlaskConical } from "lucide-react";
 import { StatusBadge } from "@/components/StatusBadge";
@@ -30,6 +30,7 @@ export function ProposalDocumentsPanel({ proposalId }: ProposalDocumentsPanelPro
   const [uploadType, setUploadType] = useState(documentChecklistOptions[0]);
   const [uploadFile, setUploadFile] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [savingId, setSavingId] = useState<string | null>(null);
 
@@ -63,7 +64,7 @@ export function ProposalDocumentsPanel({ proposalId }: ProposalDocumentsPanelPro
   async function handleUpload(e: React.FormEvent) {
     e.preventDefault();
     if (!uploadFile) {
-      setError("Seleccioná un archivo para subir.");
+      setError("Seleccione un archivo para subir.");
       return;
     }
     setError(null);
@@ -228,7 +229,7 @@ export function ProposalDocumentsPanel({ proposalId }: ProposalDocumentsPanelPro
         <p className="text-sm text-gawer-gray-500 mb-5">Sin documentos reales cargados todavía.</p>
       )}
 
-      <form onSubmit={handleUpload} className="flex flex-col sm:flex-row gap-2 items-start sm:items-center">
+      <form onSubmit={handleUpload} className="space-y-3">
         <select
           value={uploadType}
           onChange={(e) => setUploadType(e.target.value)}
@@ -238,11 +239,33 @@ export function ProposalDocumentsPanel({ proposalId }: ProposalDocumentsPanelPro
             <option key={opt} value={opt}>{opt}</option>
           ))}
         </select>
-        <input
-          type="file"
-          onChange={(e) => setUploadFile(e.target.files?.[0] ?? null)}
-          className="text-xs text-gawer-gray-600"
-        />
+
+        <div>
+          <label className="block text-sm font-medium text-gawer-gray-700 mb-1">Archivo a subir</label>
+          <div className="flex items-center gap-3 flex-wrap">
+            <input
+              ref={fileInputRef}
+              type="file"
+              onChange={(e) => setUploadFile(e.target.files?.[0] ?? null)}
+              className="hidden"
+            />
+            <button
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              className="inline-flex items-center gap-2 rounded-md border border-gawer-gray-300 bg-white px-4 py-2 text-sm font-medium text-gawer-gray-700 hover:bg-gawer-gray-50 transition-colors"
+            >
+              Seleccionar archivo
+            </button>
+            <span className="text-xs text-gawer-gray-500">
+              {uploadFile ? uploadFile.name : "Ningún archivo seleccionado"}
+            </span>
+          </div>
+          <p className="mt-1 text-xs text-gawer-gray-500">
+            Primero seleccione el tipo de documento, luego elija un archivo desde su equipo y
+            finalmente presione Subir documento.
+          </p>
+        </div>
+
         <button
           type="submit"
           disabled={isUploading}
